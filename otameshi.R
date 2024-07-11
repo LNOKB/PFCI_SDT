@@ -1,37 +1,39 @@
 sub <- 1
 dat1 <- read.table("hit.csv", header=F,sep=",") 
-dat2 <- read.table("fa.csv", header=F,sep=",") 
+dat2 <- read.table("miss.csv", header=F,sep=",") 
+dat3 <- read.table("correctrejection.csv", header=F,sep=",") 
+dat4 <- read.table("fa.csv", header=F,sep=",") 
 hit<-dat1[sub+1,2:16]
-fa<-dat1[sub+1,2:16]
+miss<-dat2[sub+1,2:16]
+correctrejection<-dat3[sub+1,2:16]
+fa<-dat4[sub+1,2:16]
 # \response frequency vectors 
 
 
 # add_constant = TRUE adds a small value to the response frequency vectors.
 ### Function for model fitting
-fit_uvsdt_mle <- function(hit, fa, add_constant = FALSE) {
+fit_uvsdt_mle <- function(hit, miss, correctrejection, fa, add_constant = FALSE) {
   
   # correction against extreme estimates 
   if (add_constant) {
     hit <- hit + (1 / length(hit))
+    miss <- miss + (1 / length(miss))
+    correctrejection <- miss + (1 / length(correctrejection))
     fa <- fa + (1 / length(fa))
   }
-  ######################
-  # data description  
-  rating_far <- cumsum(nr_s1) / sum(nr_s1)
-  rating_hr <-  cumsum(nr_s2) / sum(nr_s2)
-  n_ratings <-  length(nr_s1) / 2
+
   
   # initial guess for parameter values
-  mu <- qnorm(rating_hr[n_ratings]) - qnorm(rating_far[n_ratings])
+  mu <- 0
   sigma <- 1.5
-  cri <-  -qnorm(rating_far)
-  cri <-   cri[1:(2 * n_ratings - 1)]
+  cri <-  0
+  cri <-   0
   guess <- c(mu, sigma, cri)
   
   # model fit
   fit <- suppressWarnings(optim(uvsdt_logL, 
                                 par = guess, 
-                                inputs = list("n_ratings" = n_ratings, "nr_s1" = nr_s1, "nr_s2" = nr_s2), 
+                                inputs = list("hit" = hit, "miss" = miss, "correctrejection" = correctrejection, "fa" = fa), 
                                 gr = NULL, method = "BFGS", control = list("maxit" = 10000)))
   
   # outputs
@@ -39,6 +41,7 @@ fit_uvsdt_mle <- function(hit, fa, add_constant = FALSE) {
   sigma <- fit$par[2]
   da <-    mu / sqrt((1 + sigma^2) / 2)
   logL <- -fit$value
+  #########?############
   cri <- data.frame(matrix(vector(), 0, 2 * n_ratings - 1))
   for (i in 1:(2 * n_ratings - 1)) {
     cri[1, i] <- fit$par[2 * n_ratings + 2 - i]
@@ -48,7 +51,7 @@ fit_uvsdt_mle <- function(hit, fa, add_constant = FALSE) {
   
 }
 
-
+######################################################
 ### Likelihood function
 uvsdt_logL <- function(x, inputs) {
   
@@ -95,3 +98,6 @@ uvsdt_logL <- function(x, inputs) {
 ### Fitting
 fit <- fit_uvsdt_mle(nr_s1, nr_s2, add_constant = FALSE)
 fit
+
+###################################
+#mean+variance,mean,variance
