@@ -1,9 +1,10 @@
-library(tidyverse)#前処理に必要
-#library(magrittr) #パイプ演算子(%>%)を使うために必要
+library(tidyverse)
+#library(magrittr) 
 
-dat <- read.table("subdata.csv", header=T,sep=",") # 生データ
+dat <- read.table("subdata.csv", header=T,sep=",") 
 
 result = dat %>%             
+  filter(TorF1 == 0 | TorF1 == 1) %>% # dual-task trials
   filter(colorcond == 1 | colorcond == 2) %>%  # chimera, full-color trials
   select(subnum, exposure, maskwidth, colorcond, TorF1, colorres, TorF2, mix_mix, mix_color, color_mix, color_color) %>%    
   group_by(subnum, exposure, colorcond, maskwidth) %>%                
@@ -11,22 +12,29 @@ result = dat %>%
   print()  
 
 #write.csv(result, "otameshi.csv")
-#データフレームにする
 
 #for (sub in 4:47) {
 
 sub <- 1
-hit <- result[(sub-1)*18+1:(sub-1)*18+18,5]
-miss<- result[(sub-1)*18+1:(sub-1)*18+18,6]
-cr <- result[(sub-1)*18+1:(sub-1)*18+18,7]
-fa <- result[(sub-1)*18+1:(sub-1)*18+18,8]
-#data.frame(hit,miss,cr,fa)
+subresult <- result[(sub-1)*18+1:(sub-1)*18+18, ]#データの成型を変える
 
+data <- matrix(NA, nrow=15, ncol=4)
+data[1:5,1:2] <- rep(subresult[6,5:6],5) 
+data[1:5,3:4] <- subresult[1:5,7:8]
+data[5:10,1:2] <- rep(subresult[12,5:6],5)
+data[5:10,3:4] <- subresult[7:11,7:8]
+data[11:15,1:2] <- rep(subresult[18,5:6],5)
+data[11:15,3:4] <- subresult[13:17,7:8]
 
-# add_constant = TRUE adds a small value to the response frequency vectors.
+hit <- data[,1]
+miss<- data[,2]
+cr <- data[,3]
+fa <- data[,4]
+
 ### Function for model fitting
 fit_uvsdt_mle <- function(hit, miss, cr, fa, add_constant = TRUE) {
   
+  # add_constant = TRUE adds a small value to the response frequency vectors.
   # correction against extreme estimates 
   if (add_constant) {
     hit <- hit + 0.5
@@ -54,31 +62,7 @@ fit_uvsdt_mle <- function(hit, miss, cr, fa, add_constant = TRUE) {
   r <- 6
   s <- 6
   
-  sigma83ms <- 1
-  sigma117ms <- sigma83ms * a
-  sigma150ms <- sigma83ms * b
-  
-  mu83ms_9deg <- 0
-  mu83ms_13deg <- mu83ms_9deg * c
-  mu83ms_17deg <- mu83ms_9deg * d   
-  mu83ms_21deg <- mu83ms_9deg * e
-  mu83ms_25deg <- mu83ms_9deg * f
-  
-  mu117ms_9deg <- mu83ms_9deg * g 
-  mu117ms_13deg <- mu83ms_9deg * h
-  mu117ms_17deg <- mu83ms_9deg * i 
-  mu117ms_21deg <- mu83ms_9deg * j 
-  mu117ms_25deg <- mu83ms_9deg * k
-  
-  mu150ms_9deg <- mu83ms_9deg * l
-  mu150ms_13deg <- mu83ms_9deg * m
-  mu150ms_17deg <- mu83ms_9deg * n
-  mu150ms_21deg <- mu83ms_9deg * o
-  mu150ms_25deg <- mu83ms_9deg * p
-  
-  mu83ms_color <- mu83ms_9deg * q
-  mu117ms_color <- mu83ms_9deg * r
-  mu150ms_color <- mu83ms_9deg * s
+
   
   # initial guess for parameter values
   
@@ -155,26 +139,33 @@ fit_uvsdt_mle <- function(hit, miss, cr, fa, add_constant = TRUE) {
 uvsdt_logL <- function(x, inputs) {
   
   # target parameters
-  sigma117ms <- x[1] 
-  sigma150ms <- x[2] 
-  mu83ms_13deg <- x[3] 
-  mu83ms_17deg <- x[4] 
-  mu83ms_21deg <- x[5] 
-  mu83ms_25deg <- x[6] 
-  mu117ms_9deg <-  x[7] 
-  mu117ms_13deg <- x[8] 
-  mu117ms_17deg <- x[9] 
-  mu117ms_21deg <- x[10] 
-  mu117ms_25deg <- x[11] 
-  mu150ms_9deg <-  x[12] 
-  mu150ms_13deg <- x[13] 
-  mu150ms_17deg <- x[14] 
-  mu150ms_21deg <- x[15] 
-  mu150ms_25deg <- x[16] 
-  mu83ms_color <- x[17] 
-  mu117ms_color <- x[18] 
-  mu150ms_color <- x[19] 
-  cri <- x[20]
+  sigma83ms <- 1
+  sigma117ms <- sigma83ms * x[1]
+  sigma150ms <- sigma83ms * x[2]
+  
+  mu83ms_9deg <- 0
+  mu83ms_13deg <- mu83ms_9deg * x[3]
+  mu83ms_17deg <- mu83ms_9deg * x[4]
+  mu83ms_21deg <- mu83ms_9deg * x[5]
+  mu83ms_25deg <- mu83ms_9deg * x[6]
+  
+  mu117ms_9deg <- mu83ms_9deg * x[7] 
+  mu117ms_13deg <- mu83ms_9deg * x[8]
+  mu117ms_17deg <- mu83ms_9deg * x[9]
+  mu117ms_21deg <- mu83ms_9deg * x[10] 
+  mu117ms_25deg <- mu83ms_9deg * x[11]
+  
+  mu150ms_9deg <- mu83ms_9deg * x[12]
+  mu150ms_13deg <- mu83ms_9deg * x[13]
+  mu150ms_17deg <- mu83ms_9deg * x[14]
+  mu150ms_21deg <- mu83ms_9deg * x[15]
+  mu150ms_25deg <- mu83ms_9deg * x[16]
+  
+  mu83ms_color <- mu83ms_9deg * x[17]
+  mu117ms_color <- mu83ms_9deg * x[18]
+  mu150ms_color <- mu83ms_9deg * x[19]
+  
+  cri <- x[20] 
   
   # empirical data
   hit <- inputs$hit
@@ -183,10 +174,18 @@ uvsdt_logL <- function(x, inputs) {
   fa <- inputs$fa
 
   # model predictions
-  #反応率　criterionより上側の面積を出す　#たぶん逆にする必要がある
-  pred_missr <- pnorm(cri, mean=mu83ms, sd=sigma83ms)
+  #反応率　criterionより上側の面積を出す
+  sigmamat <- c(rep(sigma83ms,5),rep(sigma117ms,5),rep(sigma150ms,5))
+  mean_one_mat <- c(mu83ms_9deg,mu83ms_13deg,mu83ms_17deg,mu83ms_21deg,mu83ms_25deg,mu117ms_9deg,mu117ms_13deg,mu117ms_17deg,mu117ms_21deg,mu117ms_25deg,mu150ms_9deg,mu150ms_13deg,mu150ms_17deg,mu150ms_21deg,mu150ms_25deg)
+  mean_two_mat <- c(rep(mu83ms_color,5),rep(mu117ms_color,5),rep(mu150ms_color,5))
+  
+  predicted_data <- matrix(NA, nrow=15, ncol=4)
+  
+  for (cond in 1:15) {
+  
+  pred_missr <- pnorm(cri, mean=mean_two_mat[cond], sd=sigmamat[cond])
   pred_hitr <- 1-pred_missr
-  pred_crr <- pnorm(cri, mean=0, sd=sigma83ms)
+  pred_crr <- pnorm(cri, mean=mean_one_mat[cond], sd=sigmamat[cond])
   pred_far <- 1-pred_crr
   
   #反応数
@@ -194,9 +193,15 @@ uvsdt_logL <- function(x, inputs) {
   pred_nr_hit <- sum(hit+miss) * pred_hitr
   pred_nr_cr <- sum(cr+fa) * pred_crr
   pred_nr_fa <- sum(cr+fa) * pred_far
-
+  
+  predicted_data[cond,1] <- pred_nr_hit
+  predicted_data[cond,2] <- pred_nr_miss
+  predicted_data[cond,3] <- pred_nr_cr
+  predicted_data[cond,4] <- pred_nr_fa
+  }
+  
   # log likelihood
-  logL <- hit * log(pred_hitr) + miss * log(pred_hitr) + cr * log(pred_crr)+ fa * log(pred_far)
+  logL <- data * predicted_data
   if (is.nan(logL)) {
     logL <- -Inf
   }
@@ -204,16 +209,6 @@ uvsdt_logL <- function(x, inputs) {
   return(logL)
   
 }
-
-
-#尤度により、1000回中の700回なのか、100回中の70回なのかを区別できる
-
-
-#非等分散の場合は、small cとしてしか出ない。
-#等分散なら、S1（左側分布）とS2（右側分布）の交点は、正答率を最大化する点という意味がある。それより左／右だったら、「右選択しやすいバイアス」などとして有意味に解釈できる。
-#非等分散の場合は、densityが違うので、何の意味も持たない。交点も複数存在する。
-#なので、非等分散の場合、S1のピークを0とし、それを基準とした計量をする。
-
 
 ### Fitting
 fit <- fit_uvsdt_mle(hit, miss, cr, fa, add_constant = FALSE)
