@@ -69,7 +69,7 @@ uvsdt_logL <- function(x, inputs) {
   
   # model predictions
   #反応率　criterionより上側の面積を出す
-  pred_far <- c(0, pnorm(0 - cri, 0, 1),            1)
+  pred_far <- c(0, pnorm(0 - cri, 0, 1),            1)#s1分布
   pred_hr <-  c(0, pnorm((mu - cri) / sigma, 0, 1), 1)#S2分布なのでsigmaで割る
   #反応数
   pred_nr_s1 <- sum(nr_s1) * diff(pred_far)
@@ -101,3 +101,9 @@ fit
 
 ###################################
 #mean+variance,mean,variance
+###################################
+if (par[2] < par[3] & par[3] < par[4]) {
+  return(mse)
+} else {
+  return(999999)
+}
