@@ -23,6 +23,7 @@ correctrejection<-dat3[sub+1,2:16]
 fa<-dat4[sub+1,2:16]
 kk
 ll
+mm
 
 # add_constant = TRUE adds a small value to the response frequency vectors.
 ### Function for model fitting
