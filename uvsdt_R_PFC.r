@@ -201,7 +201,7 @@ uvsdt_logL <- function(x, inputs) {
   }
   
   # log likelihood
-  logL <- data * predicted_data
+  logL <- sum(data * predicted_data)
   if (is.nan(logL)) {
     logL <- -Inf
   }
