@@ -190,7 +190,7 @@ uvsdt_logL <- function(x, inputs) {
     predicted_data[cond,4] <- pred_nr_fa
   }
   
-  # log likelihood
+  # log likelihood ここがまわってない
   logL <- sum(data * predicted_data)
   if (is.nan(logL)) {
     logL <- -Inf
