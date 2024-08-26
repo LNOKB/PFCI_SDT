@@ -1,5 +1,4 @@
 library(tidyverse)
-#library(magrittr) 
 
 dat <- read.table("subdata.csv", header=T,sep=",") 
 
@@ -11,36 +10,30 @@ result = dat %>%
   summarize(hit= sum(color_color), miss= sum(color_mix), cr= sum(mix_mix), fa= sum(mix_color)) %>%       
   print()  
 
-#write.csv(result, "otameshi.csv")
-
 #for (sub in 4:47) {
 
 sub <- 1
-subresult <- result[(sub-1)*18+1:(sub-1)*18+18, ]#データの成型を変える
 
-data <- matrix(NA, nrow=15, ncol=4)
-data[1:5,1:2] <- rep(subresult[6,5:6],5) 
-data[1:5,3:4] <- subresult[1:5,7:8]
-data[5:10,1:2] <- rep(subresult[12,5:6],5)
-data[5:10,3:4] <- subresult[7:11,7:8]
-data[11:15,1:2] <- rep(subresult[18,5:6],5)
-data[11:15,3:4] <- subresult[13:17,7:8]
+#データ成型
+subresult <- result[((sub-1)*18+1):((sub-1)*18+18), ]
+subresult[1:5,5:6]　<- subresult[6,5:6] 
+subresult[7:11,5:6]　<- subresult[12,5:6] 
+subresult[13:17,5:6]　<- subresult[18,5:6] 
+data <- subresult[c(-6,-12,-18),]
 
-hit <- data[,1]
-miss<- data[,2]
-cr <- data[,3]
-fa <- data[,4]
+sigma83ms <- 1
+mu83ms_9deg <- 0
 
 ### Function for model fitting
-fit_uvsdt_mle <- function(hit, miss, cr, fa, add_constant = TRUE) {
+fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   
   # add_constant = TRUE adds a small value to the response frequency vectors.
   # correction against extreme estimates 
   if (add_constant) {
-    hit <- hit + 0.5
-    miss <- miss + 0.5
-    cr <- cr + 0.5
-    fa <- fa + 0.5
+    data$hit <- data$hit + 0.5
+    data$miss <- data$miss + 0.5
+    data$cr <- data$cr + 0.5
+    data$fa <- data$fa + 0.5
   }
   a <- 1.1
   b <- 1.2
@@ -62,7 +55,7 @@ fit_uvsdt_mle <- function(hit, miss, cr, fa, add_constant = TRUE) {
   r <- 6
   s <- 6
   
-
+  
   
   # initial guess for parameter values
   
@@ -73,7 +66,7 @@ fit_uvsdt_mle <- function(hit, miss, cr, fa, add_constant = TRUE) {
   # model fit
   fit <- suppressWarnings(optim(uvsdt_logL, 
                                 par = guess, 
-                                inputs = list("hit" = hit, "miss" = miss, "cr" = cr, "fa" = fa), 
+                                inputs = list("hit" = data$hit, "miss" = data$miss, "cr" = data$cr, "fa" = data$fa), 
                                 gr = NULL, method = "BFGS", control = list("maxit" = 10000)))
   
   # outputs
@@ -133,17 +126,14 @@ fit_uvsdt_mle <- function(hit, miss, cr, fa, add_constant = TRUE) {
 
 #}
 
-
-######################################################
 ### Likelihood function
 uvsdt_logL <- function(x, inputs) {
   
   # target parameters
-  sigma83ms <- 1
+  
   sigma117ms <- sigma83ms * x[1]
   sigma150ms <- sigma83ms * x[2]
   
-  mu83ms_9deg <- 0
   mu83ms_13deg <- mu83ms_9deg * x[3]
   mu83ms_17deg <- mu83ms_9deg * x[4]
   mu83ms_21deg <- mu83ms_9deg * x[5]
@@ -172,7 +162,7 @@ uvsdt_logL <- function(x, inputs) {
   miss <- inputs$miss 
   cr <- inputs$cr
   fa <- inputs$fa
-
+  
   # model predictions
   #反応率　criterionより上側の面積を出す
   sigmamat <- c(rep(sigma83ms,5),rep(sigma117ms,5),rep(sigma150ms,5))
@@ -182,44 +172,45 @@ uvsdt_logL <- function(x, inputs) {
   predicted_data <- matrix(NA, nrow=15, ncol=4)
   
   for (cond in 1:15) {
-  
-  pred_missr <- pnorm(cri, mean=mean_two_mat[cond], sd=sigmamat[cond])
-  pred_hitr <- 1-pred_missr
-  pred_crr <- pnorm(cri, mean=mean_one_mat[cond], sd=sigmamat[cond])
-  pred_far <- 1-pred_crr
-  
-  #反応数
-  pred_nr_miss <- sum(hit+miss) * pred_missr
-  pred_nr_hit <- sum(hit+miss) * pred_hitr
-  pred_nr_cr <- sum(cr+fa) * pred_crr
-  pred_nr_fa <- sum(cr+fa) * pred_far
-  
-  predicted_data[cond,1] <- pred_nr_hit
-  predicted_data[cond,2] <- pred_nr_miss
-  predicted_data[cond,3] <- pred_nr_cr
-  predicted_data[cond,4] <- pred_nr_fa
+    
+    pred_missr <- pnorm(cri, mean=mean_two_mat[cond], sd=sigmamat[cond])
+    pred_hitr <- 1-pred_missr
+    pred_crr <- pnorm(cri, mean=mean_one_mat[cond], sd=sigmamat[cond])
+    pred_far <- 1-pred_crr
+    
+    #反応数
+    pred_nr_miss <- sum(hit+miss) * pred_missr
+    pred_nr_hit <- sum(hit+miss) * pred_hitr
+    pred_nr_cr <- sum(cr+fa) * pred_crr
+    pred_nr_fa <- sum(cr+fa) * pred_far
+    
+    predicted_data[cond,1] <- pred_nr_hit
+    predicted_data[cond,2] <- pred_nr_miss
+    predicted_data[cond,3] <- pred_nr_cr
+    predicted_data[cond,4] <- pred_nr_fa
   }
   
   # log likelihood
-  logL <- data * predicted_data
+  logL <- sum(data * predicted_data)
   if (is.nan(logL)) {
     logL <- -Inf
   }
-  logL <- -logL　#対数尤度を対数損失にする
-  return(logL)
+  if (1 < par[3] & par[3] < par[4] & par[4] < par[5] & par[5] < par[6] & par[7] < par[8] & par[8] < par[9] & par[9]< par[10] & par[10]< par[11] & par[12] < par[13] & par[13] < par[14] & par[14] < par[15] & par[15] < par[16]) {
+    logL <- -logL　#対数尤度を対数損失にする
+    return(logL)
+  } 
+  else {
+    return(999999)
+  }
+  
   
 }
 
 ### Fitting
-fit <- fit_uvsdt_mle(hit, miss, cr, fa, add_constant = FALSE)
+fit <- fit_uvsdt_mle(data, add_constant = FALSE)
 fit
 
 ###################################
 #mean+variance,mean,variance
 ###################################
-#restriction of inequality
-#if (1 < par[3] & par[3] < par[4] & par[4] < par[5] & par[5] < par[6] & par[7] < par[8] & par[8] < par[9] & par[9]< par[10] & par[10]< par[11] & par[12] < par[13] & par[13] < par[14] & par[14] < par[15] & par[15] < par[16]) {
- # return(mse)
-#} else {
- # return(999999)
-#}
+
