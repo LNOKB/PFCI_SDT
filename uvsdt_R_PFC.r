@@ -119,6 +119,33 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   
   logL <- -fit$value
   
+  #反応率　criterionより上側の面積を出す
+  sigmamat <- c(rep(sigma83ms,5),rep(sigma117ms,5),rep(sigma150ms,5))
+  mean_one_mat <- c(mu83ms_9deg,mu83ms_13deg,mu83ms_17deg,mu83ms_21deg,mu83ms_25deg,mu117ms_9deg,mu117ms_13deg,mu117ms_17deg,mu117ms_21deg,mu117ms_25deg,mu150ms_9deg,mu150ms_13deg,mu150ms_17deg,mu150ms_21deg,mu150ms_25deg)
+  mean_two_mat <- c(rep(mu83ms_color,5),rep(mu117ms_color,5),rep(mu150ms_color,5))
+  
+  predicted_data2 <- matrix(NA, nrow=15, ncol=4)
+  for (cond in 1:15) {
+    
+    pred_missr <- pnorm(cri, mean=mean_two_mat[cond], sd=sigmamat[cond])
+    pred_hitr <- 1-pred_missr
+    pred_crr <- pnorm(cri, mean=mean_one_mat[cond], sd=sigmamat[cond])
+    pred_far <- 1-pred_crr
+    
+    #反応数
+    pred_nr_miss <- sum(data$hit[cond]+data$miss[cond]) * pred_missr
+    pred_nr_hit <- sum(data$hit[cond]+data$miss[cond]) * pred_hitr
+    pred_nr_cr <- sum(data$cr[cond]+data$fa[cond]) * pred_crr
+    pred_nr_fa <- sum(data$cr[cond]+data$fa[cond]) * pred_far
+    
+    predicted_data2[cond,1] <-pred_nr_hit
+    predicted_data2[cond,2] <- pred_nr_miss
+    predicted_data2[cond,3] <- pred_nr_cr
+    predicted_data2[cond,4] <- pred_nr_fa
+  }
+  
+  
+  
   est <- data.frame(sigma117ms = sigma117ms,
                     sigma150ms = sigma150ms,
                     mu83ms_9deg   = mu83ms_9deg, 
@@ -141,7 +168,8 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
                     mu150ms_color = mu150ms_color,
                     cri = cri, 
                     logL = logL)
-  return(est)
+  return(predicted_data2)
+#(est)
   
 }
 
