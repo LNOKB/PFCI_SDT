@@ -35,6 +35,8 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
     data$cr <- data$cr + 0.5
     data$fa <- data$fa + 0.5
   }
+  
+  # initial guess for parameter values
   a <- 1.1
   b <- 1.2
   c <- 1
@@ -54,12 +56,7 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   q <- 6
   r <- 6
   s <- 6
-  
-  
-  
-  # initial guess for parameter values
-  
-  cri <- 1 #β
+  cri <- 1 
   
   guess <- c(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, cri)
   
@@ -68,6 +65,30 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
                                 par = guess, 
                                 inputs = list("hit" = data$hit, "miss" = data$miss, "cr" = data$cr, "fa" = data$fa), 
                                 gr = NULL, method = "BFGS", control = list("maxit" = 10000)))
+  
+  ########################################################
+  a <- 1.1
+  b <- 1.2
+  c <- 1
+  d <- 2
+  e <- 3
+  f <- 4
+  g <- 1
+  h <- 2
+  i <- 3
+  j <- 4
+  k <- 5
+  l <- 1
+  m <- 2
+  n <- 3
+  o <- 4
+  p <- 5
+  q <- 6
+  r <- 6
+  s <- 6
+  fit$par <- c(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, cri)
+  ########################################################
+  
   
   # outputs
   sigma117ms <- fit$par[1] * sigma83ms
@@ -184,14 +205,14 @@ uvsdt_logL <- function(x, inputs) {
     pred_nr_cr <- sum(cr+fa) * pred_crr
     pred_nr_fa <- sum(cr+fa) * pred_far
     
-    predicted_data[cond,1] <- pred_nr_hit
-    predicted_data[cond,2] <- pred_nr_miss
-    predicted_data[cond,3] <- pred_nr_cr
-    predicted_data[cond,4] <- pred_nr_fa
+    predicted_data[cond,1] <- pred_hitr
+    predicted_data[cond,2] <- pred_missr
+    predicted_data[cond,3] <- pred_crr
+    predicted_data[cond,4] <- pred_far
   }
   
   # log likelihood ここがまわってない
-  logL <- sum(data * predicted_data)
+  logL <- sum(data * log(predicted_data))
   if (is.nan(logL)) {
     logL <- -Inf
   }
