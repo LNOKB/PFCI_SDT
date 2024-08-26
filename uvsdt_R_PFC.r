@@ -67,26 +67,26 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
                                 gr = NULL, method = "BFGS", control = list("maxit" = 10000)))
   
   ########################################################
-  a <- 1.1
-  b <- 1.2
-  c <- 1
-  d <- 2
-  e <- 3
-  f <- 4
-  g <- 1
-  h <- 2
-  i <- 3
-  j <- 4
-  k <- 5
-  l <- 1
-  m <- 2
-  n <- 3
-  o <- 4
-  p <- 5
-  q <- 6
-  r <- 6
-  s <- 6
-  fit$par <- c(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, cri)
+  #a <- 1.1
+  #b <- 1.2
+  #c <- 1
+  #d <- 2
+  #e <- 3
+  #f <- 4
+  #g <- 1
+  #h <- 2
+  #i <- 3
+  #j <- 4
+  #k <- 5
+  #l <- 1
+  #m <- 2
+  #n <- 3
+  #o <- 4
+  #p <- 5
+  #q <- 6
+  #r <- 6
+  #s <- 6
+  #fit$par <- c(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, cri)
   ########################################################
   
   
@@ -94,26 +94,26 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   sigma117ms <- fit$par[1] * sigma83ms
   sigma150ms <- fit$par[2] * sigma83ms
   
-  mu83ms_13deg <- fit$par[3] * mu83ms_9deg
-  mu83ms_17deg <- fit$par[4] * mu83ms_9deg
-  mu83ms_21deg <- fit$par[5] * mu83ms_9deg
-  mu83ms_25deg <- fit$par[6] * mu83ms_9deg
+  mu83ms_13deg <- fit$par[3] #* mu83ms_9deg
+  mu83ms_17deg <- fit$par[4] #* mu83ms_9deg
+  mu83ms_21deg <- fit$par[5] #* mu83ms_9deg
+  mu83ms_25deg <- fit$par[6] #* mu83ms_9deg
   
-  mu117ms_9deg <-  fit$par[7] * mu83ms_9deg
-  mu117ms_13deg <- fit$par[8] * mu83ms_9deg
-  mu117ms_17deg <- fit$par[9] * mu83ms_9deg
-  mu117ms_21deg <- fit$par[10] * mu83ms_9deg
-  mu117ms_25deg <- fit$par[11] * mu83ms_9deg
+  mu117ms_9deg <-  fit$par[7] #* mu83ms_9deg
+  mu117ms_13deg <- fit$par[8] #* mu83ms_9deg
+  mu117ms_17deg <- fit$par[9] #* mu83ms_9deg
+  mu117ms_21deg <- fit$par[10] #* mu83ms_9deg
+  mu117ms_25deg <- fit$par[11] #* mu83ms_9deg
   
-  mu150ms_9deg <-  fit$par[12] * mu83ms_9deg
-  mu150ms_13deg <- fit$par[13] * mu83ms_9deg
-  mu150ms_17deg <- fit$par[14] * mu83ms_9deg
-  mu150ms_21deg <- fit$par[15] * mu83ms_9deg
-  mu150ms_25deg <- fit$par[16] * mu83ms_9deg
+  mu150ms_9deg <-  fit$par[12] #* mu83ms_9deg
+  mu150ms_13deg <- fit$par[13] #* mu83ms_9deg
+  mu150ms_17deg <- fit$par[14] #* mu83ms_9deg
+  mu150ms_21deg <- fit$par[15] #* mu83ms_9deg
+  mu150ms_25deg <- fit$par[16] #* mu83ms_9deg
   
-  mu83ms_color <- fit$par[17] * mu83ms_9deg
-  mu117ms_color <- fit$par[18] * mu83ms_9deg
-  mu150ms_color <- fit$par[19] * mu83ms_9deg
+  mu83ms_color <- fit$par[17] #* mu83ms_9deg
+  mu117ms_color <- fit$par[18] #* mu83ms_9deg
+  mu150ms_color <- fit$par[19] #* mu83ms_9deg
   
   cri <- fit$par[20] 
   
@@ -155,26 +155,26 @@ uvsdt_logL <- function(x, inputs) {
   sigma117ms <- sigma83ms * x[1]
   sigma150ms <- sigma83ms * x[2]
   
-  mu83ms_13deg <- mu83ms_9deg * x[3]
-  mu83ms_17deg <- mu83ms_9deg * x[4]
-  mu83ms_21deg <- mu83ms_9deg * x[5]
-  mu83ms_25deg <- mu83ms_9deg * x[6]
+  mu83ms_13deg <-  x[3]
+  mu83ms_17deg <-  x[4]
+  mu83ms_21deg <-  x[5]
+  mu83ms_25deg <-  x[6]
   
-  mu117ms_9deg <- mu83ms_9deg * x[7] 
-  mu117ms_13deg <- mu83ms_9deg * x[8]
-  mu117ms_17deg <- mu83ms_9deg * x[9]
-  mu117ms_21deg <- mu83ms_9deg * x[10] 
-  mu117ms_25deg <- mu83ms_9deg * x[11]
+  mu117ms_9deg <-  x[7] 
+  mu117ms_13deg <-  x[8]
+  mu117ms_17deg <-  x[9]
+  mu117ms_21deg <-  x[10] 
+  mu117ms_25deg <-  x[11]
   
-  mu150ms_9deg <- mu83ms_9deg * x[12]
-  mu150ms_13deg <- mu83ms_9deg * x[13]
-  mu150ms_17deg <- mu83ms_9deg * x[14]
-  mu150ms_21deg <- mu83ms_9deg * x[15]
-  mu150ms_25deg <- mu83ms_9deg * x[16]
+  mu150ms_9deg <-  x[12]
+  mu150ms_13deg <-  x[13]
+  mu150ms_17deg <-  x[14]
+  mu150ms_21deg <-  x[15]
+  mu150ms_25deg <-  x[16]
   
-  mu83ms_color <- mu83ms_9deg * x[17]
-  mu117ms_color <- mu83ms_9deg * x[18]
-  mu150ms_color <- mu83ms_9deg * x[19]
+  mu83ms_color <-  x[17]
+  mu117ms_color <-  x[18]
+  mu150ms_color <-  x[19]
   
   cri <- x[20] 
   
