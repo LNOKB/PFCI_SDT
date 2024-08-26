@@ -195,13 +195,17 @@ uvsdt_logL <- function(x, inputs) {
   if (is.nan(logL)) {
     logL <- -Inf
   }
-  if (1 < par[3] & par[3] < par[4] & par[4] < par[5] & par[5] < par[6] & par[7] < par[8] & par[8] < par[9] & par[9]< par[10] & par[10]< par[11] & par[12] < par[13] & par[13] < par[14] & par[14] < par[15] & par[15] < par[16]) {
-    logL <- -logL　#対数尤度を対数損失にする
-    return(logL)
-  } 
-  else {
-    return(999999)
-  }
+  
+
+  logL <- -logL
+  return(logL)
+  #if (1 < par[3] & par[3] < par[4] & par[4] < par[5] & par[5] < par[6] & par[7] < par[8] & par[8] < par[9] & par[9]< par[10] & par[10]< par[11] & par[12] < par[13] & par[13] < par[14] & par[14] < par[15] & par[15] < par[16]) {
+    #logL <- -logL　#対数尤度を対数損失にする
+    #return(logL)
+  #} 
+  #else {
+   # return(999999)
+  #}
   
   
 }
