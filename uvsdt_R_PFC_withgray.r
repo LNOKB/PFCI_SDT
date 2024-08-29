@@ -31,6 +31,8 @@ data[19:21,2]<-unlist(result[19:21,13])#_color
 sigma83ms <- 1
 mu83ms_gray <- 0
 
+
+
 ### Function for model fitting
 fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   
@@ -39,9 +41,19 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   if (add_constant) {
     data <- data+0.5
   }
-
-  # initial guess for parameter values 
-  # d-primeベースで出す
+  
+  # initial guess for parameter values d-primeベースで出す
+  #mu83ms_9deg <- 1.1
+  #mu83ms_13deg <- 2
+  #mu83ms_17deg <- 3 
+  #mu83ms_21deg <- 4
+  #mu83ms_25deg <- 5
+  #mu83ms_color <- 6
+  #mu117ms<-  2
+  #mu150ms <- 3
+  #sigma117ms <- 1.5
+  #sigma150ms <- 2
+  #cri <- 1
   
   mu83ms_9deg <-qnorm(data[4,2]/(data[4,1]+data[4,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
   mu83ms_13deg <-qnorm(data[5,2]/(data[5,1]+data[5,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
@@ -153,7 +165,7 @@ uvsdt_logL <- function(x, inputs) {
     predicted_data[cond,2] <-pred_nr_color_color
     predicted_data[cond,1] <- pred_nr_color_others
   }
-
+  
   
   # log likelihood 
   logL <- sum(data * log(predicted_data))
@@ -163,7 +175,7 @@ uvsdt_logL <- function(x, inputs) {
   
   
   logL <- -logL
-  return(-logL)
+  return(logL)
   #if (1 < par[3] & par[3] < par[4] & par[4] < par[5] & par[5] < par[6] & par[7] < par[8] & par[8] < par[9] & par[9]< par[10] & par[10]< par[11] & par[12] < par[13] & par[13] < par[14] & par[14] < par[15] & par[15] < par[16]) {
   #logL <- -logL　#対数尤度を対数損失にする
   #return(logL)
