@@ -5,30 +5,32 @@ dat <- read.table("subdata.csv", header=T,sep=",")
 
 result = dat %>%             
   filter(TorF1 == 0 | TorF1 == 1) %>% # dual-task trials
-  select(subnum, exposure, maskwidth, colorcond, TorF1, colorres, TorF2, gray_gray, gray_mix, gray_color, mix_mix, mix_color, color_gray, color_mix, color_color) %>%    
+  select(subnum, exposure, maskwidth, colorcond, TorF1, colorres, TorF2, gray_gray, gray_mix, gray_color, mix_gray, mix_mix, mix_color, color_gray, color_mix, color_color) %>%    
   group_by(subnum, colorcond, exposure, maskwidth) %>%                
-  summarize(gray_gray= sum(gray_gray), gray_mix= sum(gray_mix), gray_color= sum(gray_color), mix_mix= sum(mix_mix), mix_color= sum(mix_color), color_gray= sum(color_gray), color_mix= sum(color_mix), color_color= sum(color_color)) #%>%       
+  summarize(gray_gray= sum(gray_gray), gray_mix= sum(gray_mix), gray_color= sum(gray_color), mix_gray= sum(mix_gray), mix_mix= sum(mix_mix), mix_color= sum(mix_color), color_gray= sum(color_gray), color_mix= sum(color_mix), color_color= sum(color_color)) #%>%       
 #print()  
 
 #for (sub in 4:47) {
 
 sub <- 1
 
+#データ成型
+subdata <- result[((sub-1)*18+1):((sub-1)*18+18), ]
+data <- matrix(NA, nrow=21, ncol=2)
+#gray
+data[1:3,1]<-unlist(result[1:3,5]+result[1:3,6])#_others
+data[1:3,2]<-unlist(result[1:3,7])#_color
+#chimera
+data[4:18,1]<-unlist(result[4:18,8]+result[4:18,9])#_others
+data[4:18,2]<-unlist(result[4:18,10])#_color
+#color
+data[19:21,1]<-unlist(result[19:21,11]+result[19:21,12])#_others
+data[19:21,2]<-unlist(result[19:21,13])#_color
+
+#基準となるパラメータ
 sigma83ms <- 1
 mu83ms_gray <- 0
 
-
-#subresult[4:21,5:6]　<- subresult[4:21,5:6] 
-#subresult[7:11,5:6]　<- subresult[12,5:6] 
-#subresult[13:17,5:6]　<- subresult[18,5:6] 
-#data <- subresult[c(-6,-12,-18),]
-
-#temp <- 
-#  rename(data, ID = id)
-#head(temp)
-
-result<-unlist(result[1,1])
-subdata <- result[((sub-1)*18+1):((sub-1)*18+18), ]
 
 
 ### Function for model fitting
@@ -36,23 +38,21 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   
   # add_constant = TRUE adds a small value to the response frequency vectors.
   # correction against extreme estimates 
-  constant <- 0
   if (add_constant) {
-    constant <- 0.5
+    data <- data+0.5
   }
-  data<-cbind(result[,1:4],result[,5:10]+constant)
-  
+
   # initial guess for parameter values d-primeベースで出す
   mu83ms_9deg <- 1.1
-  mu83ms_13deg <- 1
-  mu83ms_17deg <- 1 
-  mu83ms_21deg <- 1
-  mu83ms_25deg <- 1
-  mu83ms_color <- 1
-  mu117ms<-  1
-  mu150ms <- 1
-  sigma117ms <- 1
-  sigma150ms <- 1
+  mu83ms_13deg <- 2
+  mu83ms_17deg <- 3 
+  mu83ms_21deg <- 4
+  mu83ms_25deg <- 5
+  mu83ms_color <- 6
+  mu117ms<-  2
+  mu150ms <- 3
+  sigma117ms <- 1.5
+  sigma150ms <- 2
   cri <- 1
   
   guess <- c(mu83ms_9deg, mu83ms_13deg, mu83ms_17deg, mu83ms_21deg, mu83ms_25deg, mu83ms_color, mu117ms, mu150ms, sigma117ms, sigma150ms, cri)
@@ -60,7 +60,7 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   # model fit
   fit <- suppressWarnings(optim(uvsdt_logL, 
                                 par = guess, 
-                                inputs = list("gray_gray" = data$gray_gray, "gray_chimera" = data$gray_mix, "gray_color" = data$gray_color, "chimera_gray" = data$mix_gray,  "chimera_chimera" = data$mix_mix, "chimera_color" = data$mix_color, "color_gray" = data$color_gray, "color_chimera" = data$color_mix, "color_color" = data$color_color), 
+                                inputs = list("gray_others" = data[1:3,1],  "gray_color" = data[1:3,2], "chimera_others" = data[4:18,1],  "chimera_color" = data[4:18,2], "color_others" = data[19:21,1], "color_color" = data[19:21,2]), 
                                 gr = NULL, method = "BFGS", control = list("maxit" = 10000)))
   
   # outputs
@@ -113,17 +113,17 @@ uvsdt_logL <- function(x, inputs) {
   # model predictions
   predicted_data <- matrix(NA, nrow=21, ncol=2)
   #gray
-  mean_one_mat <- c(mu83ms_gray, mu83ms_gray*mu117ms, mu83ms_gray*mu117ms)
+  mean_one_mat <- c(mu83ms_gray, mu83ms_gray*mu117ms, mu83ms_gray*mu150ms)
   sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
   for (cond in 1:3) {
     mean_inverted <- -mean_one_mat[cond]+2*cri
     pred_gray_color_rate <- pnorm(cri, mean=mean_inverted, sd=sigmamat[cond])
     pred_gray_others_rate <- 1-pred_gray_color_rate
     #反応数
-    pred_nr_gray_color <- sum(data$gray_gray[cond]+data$gray_mix[cond]+data$gray_color[cond]) * pred_gray_color_rate
-    pred_nr_gray_others <- sum(data$gray_gray[cond]+data$gray_mix[cond]+data$gray_color[cond]) * pred_gray_others_rate
-    predicted_data[cond,1] <-pred_nr_gray_color
-    predicted_data[cond,2] <- pred_nr_gray_others
+    pred_nr_gray_color <- sum(data[cond,1]+data[cond,2]) * pred_gray_color_rate
+    pred_nr_gray_others <- sum(data[cond,1]+data[cond,2]) * pred_gray_others_rate
+    predicted_data[cond,2] <-pred_nr_gray_color
+    predicted_data[cond,1] <- pred_nr_gray_others
   }
   
   #chimera
@@ -134,10 +134,10 @@ uvsdt_logL <- function(x, inputs) {
     pred_chimera_color_rate <- pnorm(cri, mean=mean_inverted, sd=sigmamat[cond-3])
     pred_chimera_others_rate <- 1-pred_chimera_color_rate
     #反応数
-    pred_nr_chimera_color <- sum(data$mix_gray[cond]+data$mix_chimera[cond]+data$mix_color[cond]) *pred_chimera_color_rate
-    pred_nr_chimera_others <- sum(data$mix_gray[cond]+data$mix_chimera[cond]+data$mix_color[cond]) * pred_chimera_others_rate
-    predicted_data[cond,1] <- pred_nr_chimera_color
-    predicted_data[cond,2] <- pred_nr_chimera_others
+    pred_nr_chimera_color <- sum(data[cond,1]+data[cond,2]) *pred_chimera_color_rate
+    pred_nr_chimera_others <- sum(data[cond,1]+data[cond,2]) * pred_chimera_others_rate
+    predicted_data[cond,2] <- pred_nr_chimera_color
+    predicted_data[cond,1] <- pred_nr_chimera_others
   }
   
   #color
@@ -148,10 +148,10 @@ uvsdt_logL <- function(x, inputs) {
     pred_color_color_rate <- pnorm(cri, mean=mean_inverted, sd=sigmamat[cond-18])
     pred_color_others_rate <- 1-pred_color_color_rate
     #反応数
-    pred_nr_color_color <- sum(data$color_gray[cond]+data$color_mix[cond]+data$color_color[cond]) * pred_color_color_rate
-    pred_nr_color_others <- sum(data$color_gray[cond]+data$color_mix[cond]+data$color_color[cond]) * pred_color_others_rate
-    predicted_data[cond,1] <-pred_nr_color_color
-    predicted_data[cond,2] <- pred_nr_color_others
+    pred_nr_color_color <- sum(data[cond,1]+data[cond,2]) * pred_color_color_rate
+    pred_nr_color_others <- sum(data[cond,1]+data[cond,2]) * pred_color_others_rate
+    predicted_data[cond,2] <-pred_nr_color_color
+    predicted_data[cond,1] <- pred_nr_color_others
   }
 
   
@@ -176,7 +176,7 @@ uvsdt_logL <- function(x, inputs) {
 }
 
 ### Fitting
-fit <- fit_uvsdt_mle(data, add_constant = FALSE)
+fit <- fit_uvsdt_mle(data, add_constant = TRUE)
 fit
 
 ###################################
