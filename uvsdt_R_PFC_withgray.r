@@ -59,11 +59,11 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   mu83ms_21deg <- qnorm(data[7,2]/(data[7,1]+data[7,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
   mu83ms_25deg <- qnorm(data[8,2]/(data[8,1]+data[8,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
   mu83ms_color <- qnorm(data[19,2]/(data[19,1]+data[19,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
-  mu117ms<-  mu83ms_9deg*2
-  mu150ms <- mu83ms_9deg*3
-  sigma117ms <- sigma83ms*1.5
-  sigma150ms <- sigma83ms*2
-  cri <- 1
+  mu117ms<-  mu83ms_9deg*1.1
+  mu150ms <- mu83ms_9deg*1.4
+  sigma117ms <- sigma83ms*1
+  sigma150ms <- sigma83ms*1.1
+  cri <- 2
   
   guess <- c(mu83ms_9deg, mu83ms_13deg, mu83ms_17deg, mu83ms_21deg, mu83ms_25deg, mu83ms_color, mu117ms, mu150ms, sigma117ms, sigma150ms, cri)
   
@@ -87,7 +87,7 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   cri <- fit$par[11] 
   
   logL <- -fit$value
-  
+ 
   est <- data.frame(mu83ms_9deg   = mu83ms_9deg, 
                     mu83ms_13deg  = mu83ms_13deg, 
                     mu83ms_17deg  = mu83ms_17deg, 
@@ -100,7 +100,7 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
                     sigma150ms = sigma150ms,
                     cri = cri, 
                     logL = logL)
-  return(est)
+  return(list(est,predicted_data))
 }
 
 
@@ -120,49 +120,49 @@ uvsdt_logL <- function(x, inputs) {
   sigma150ms <- x[10]
   cri <- x[11] 
   
+  ##############################################################################
   # model predictions
   predicted_data <- matrix(NA, nrow=21, ncol=2)
   #gray
   mean_one_mat <- c(mu83ms_gray, mu83ms_gray*mu117ms, mu83ms_gray*mu150ms)
   sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
   for (cond in 1:3) {
-    mean_inverted <- -mean_one_mat[cond]+2*cri
-    pred_gray_color_rate <- pnorm(cri, mean=mean_inverted, sd=sigmamat[cond])
-    pred_gray_others_rate <- 1-pred_gray_color_rate
+    pred_gray_others_rate <- pnorm(cri, mean= mean_one_mat[cond], sd=sigmamat[cond])
+    pred_gray_color_rate <- 1-pred_gray_others_rate
+    
     #反応数
     pred_nr_gray_color <- sum(data[cond,1]+data[cond,2]) * pred_gray_color_rate
     pred_nr_gray_others <- sum(data[cond,1]+data[cond,2]) * pred_gray_others_rate
-    predicted_data[cond,2] <-pred_gray_color_rate
     predicted_data[cond,1] <- pred_gray_others_rate
+    predicted_data[cond,2] <-pred_gray_color_rate
   }
   
   #chimera
   mean_one_mat <- c(mu83ms_9deg,mu83ms_13deg,mu83ms_17deg,mu83ms_21deg,mu83ms_25deg, mu83ms_9deg*mu117ms,mu83ms_13deg*mu117ms,mu83ms_17deg*mu117ms,mu83ms_21deg*mu117ms,mu83ms_25deg*mu117ms, mu83ms_9deg*mu150ms,mu83ms_13deg*mu150ms,mu83ms_17deg*mu150ms,mu83ms_21deg*mu150ms,mu83ms_25deg*mu150ms)
   sigmamat <- c(rep(sigma83ms,5),rep(sigma117ms,5),rep(sigma150ms,5))
   for (cond in 4:18) {
-    mean_inverted <- -mean_one_mat[cond-3]+2*cri
-    pred_chimera_color_rate <- pnorm(cri, mean=mean_inverted, sd=sigmamat[cond-3])
-    pred_chimera_others_rate <- 1-pred_chimera_color_rate
+    pred_chimera_others_rate <- pnorm(cri, mean=mean_one_mat[cond-3], sd=sigmamat[cond-3])
+    pred_chimera_color_rate <-1-pred_chimera_others_rate
     #反応数
     pred_nr_chimera_color <- sum(data[cond,1]+data[cond,2]) *pred_chimera_color_rate
     pred_nr_chimera_others <- sum(data[cond,1]+data[cond,2]) * pred_chimera_others_rate
-    predicted_data[cond,2] <- pred_chimera_color_rate
     predicted_data[cond,1] <- pred_chimera_others_rate
+    predicted_data[cond,2] <- pred_chimera_color_rate
   }
   
   #color
   mean_two_mat <- c(mu83ms_color,mu83ms_color*mu117ms,mu83ms_color*mu150ms)
   sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
   for (cond in 19:21) {
-    mean_inverted <- -mean_one_mat[cond-18]+2*cri
-    pred_color_color_rate <- pnorm(cri, mean=mean_inverted, sd=sigmamat[cond-18])
-    pred_color_others_rate <- 1-pred_color_color_rate
+    pred_color_others_rate <- pnorm(cri, mean=mean_one_mat[cond-18], sd=sigmamat[cond-18])
+    pred_color_color_rate <- 1-pred_color_others_rate
     #反応数
     pred_nr_color_color <- sum(data[cond,1]+data[cond,2]) * pred_color_color_rate
     pred_nr_color_others <- sum(data[cond,1]+data[cond,2]) * pred_color_others_rate
-    predicted_data[cond,2] <-pred_color_color_rate
     predicted_data[cond,1] <- pred_color_others_rate
+    predicted_data[cond,2] <-pred_color_color_rate
   }
+  ##############################################################################
   
   
   # log likelihood 
