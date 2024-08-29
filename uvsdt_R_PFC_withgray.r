@@ -31,8 +31,6 @@ data[19:21,2]<-unlist(result[19:21,13])#_color
 sigma83ms <- 1
 mu83ms_gray <- 0
 
-
-
 ### Function for model fitting
 fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   
@@ -134,8 +132,8 @@ uvsdt_logL <- function(x, inputs) {
     #反応数
     pred_nr_gray_color <- sum(data[cond,1]+data[cond,2]) * pred_gray_color_rate
     pred_nr_gray_others <- sum(data[cond,1]+data[cond,2]) * pred_gray_others_rate
-    predicted_data[cond,2] <-pred_nr_gray_color
-    predicted_data[cond,1] <- pred_nr_gray_others
+    predicted_data[cond,2] <-pred_gray_color_rate
+    predicted_data[cond,1] <- pred_gray_others_rate
   }
   
   #chimera
@@ -148,8 +146,8 @@ uvsdt_logL <- function(x, inputs) {
     #反応数
     pred_nr_chimera_color <- sum(data[cond,1]+data[cond,2]) *pred_chimera_color_rate
     pred_nr_chimera_others <- sum(data[cond,1]+data[cond,2]) * pred_chimera_others_rate
-    predicted_data[cond,2] <- pred_nr_chimera_color
-    predicted_data[cond,1] <- pred_nr_chimera_others
+    predicted_data[cond,2] <- pred_chimera_color_rate
+    predicted_data[cond,1] <- pred_chimera_others_rate
   }
   
   #color
@@ -162,8 +160,8 @@ uvsdt_logL <- function(x, inputs) {
     #反応数
     pred_nr_color_color <- sum(data[cond,1]+data[cond,2]) * pred_color_color_rate
     pred_nr_color_others <- sum(data[cond,1]+data[cond,2]) * pred_color_others_rate
-    predicted_data[cond,2] <-pred_nr_color_color
-    predicted_data[cond,1] <- pred_nr_color_others
+    predicted_data[cond,2] <-pred_color_color_rate
+    predicted_data[cond,1] <- pred_color_others_rate
   }
   
   
