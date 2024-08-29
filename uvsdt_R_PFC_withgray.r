@@ -63,9 +63,9 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   mu83ms_color <- qnorm(data[19,2]/(data[19,1]+data[19,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
   mu117ms<-  mu83ms_9deg*2
   mu150ms <- mu83ms_9deg*3
-  sigma117ms <- 1
-  sigma150ms <- 1
-  cri <- 4
+  sigma117ms <- sigma83ms*1.5
+  sigma150ms <- sigma83ms*2
+  cri <- 1
   
   guess <- c(mu83ms_9deg, mu83ms_13deg, mu83ms_17deg, mu83ms_21deg, mu83ms_25deg, mu83ms_color, mu117ms, mu150ms, sigma117ms, sigma150ms, cri)
   
