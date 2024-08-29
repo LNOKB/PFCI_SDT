@@ -12,7 +12,7 @@ result = dat %>%
 
 #for (sub in 4:47) {
 
-sub <- 1
+sub <- 2
 
 #データ成型
 subdata <- result[((sub-1)*18+1):((sub-1)*18+18), ]
@@ -30,6 +30,7 @@ data[19:21,2]<-unlist(result[19:21,13])#_color
 #基準となるパラメータ
 sigma83ms <- 1
 mu83ms_gray <- 0
+data<-data+0.5
 
 ### Function for model fitting
 fit_uvsdt_mle <- function(data, add_constant = TRUE) {
@@ -59,8 +60,8 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   mu83ms_21deg <- qnorm(data[7,2]/(data[7,1]+data[7,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
   mu83ms_25deg <- qnorm(data[8,2]/(data[8,1]+data[8,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
   mu83ms_color <- qnorm(data[19,2]/(data[19,1]+data[19,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
-  mu117ms<-  mu83ms_9deg*1.1
-  mu150ms <- mu83ms_9deg*1.4
+  mu117ms<-  1.1
+  mu150ms <- 1.4
   sigma117ms <- sigma83ms*1
   sigma150ms <- sigma83ms*1.1
   cri <- 2
@@ -69,8 +70,8 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   
   # model fit
   fit <- suppressWarnings(optim(uvsdt_logL, 
-                                par = guess, 
-                                inputs = list("gray_others" = data[1:3,1],  "gray_color" = data[1:3,2], "chimera_others" = data[4:18,1],  "chimera_color" = data[4:18,2], "color_others" = data[19:21,1], "color_color" = data[19:21,2]), 
+                                par = guess,                                 inputs = list("gray_others" = data[1:3,1],  "gray_color" = data[1:3,2], "chimera_others" = data[4:18,1],  "chimera_color" = data[4:18,2], "color_others" = data[19:21,1], "color_color" = data[19:21,2]), 
+
                                 gr = NULL, method = "BFGS", control = list("maxit" = 10000)))
   
   # outputs
@@ -87,7 +88,7 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   cri <- fit$par[11] 
   
   logL <- -fit$value
- 
+  
   est <- data.frame(mu83ms_9deg   = mu83ms_9deg, 
                     mu83ms_13deg  = mu83ms_13deg, 
                     mu83ms_17deg  = mu83ms_17deg, 
