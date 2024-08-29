@@ -31,8 +31,6 @@ data[19:21,2]<-unlist(result[19:21,13])#_color
 sigma83ms <- 1
 mu83ms_gray <- 0
 
-
-
 ### Function for model fitting
 fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   
@@ -42,18 +40,20 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
     data <- data+0.5
   }
 
-  # initial guess for parameter values d-primeベースで出す
-  mu83ms_9deg <- 1.1
-  mu83ms_13deg <- 2
-  mu83ms_17deg <- 3 
-  mu83ms_21deg <- 4
-  mu83ms_25deg <- 5
-  mu83ms_color <- 6
-  mu117ms<-  2
-  mu150ms <- 3
-  sigma117ms <- 1.5
-  sigma150ms <- 2
-  cri <- 1
+  # initial guess for parameter values 
+  # d-primeベースで出す
+  
+  mu83ms_9deg <-qnorm(data[4,2]/(data[4,1]+data[4,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
+  mu83ms_13deg <-qnorm(data[5,2]/(data[5,1]+data[5,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
+  mu83ms_17deg <- qnorm(data[6,2]/(data[6,1]+data[6,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
+  mu83ms_21deg <- qnorm(data[7,2]/(data[7,1]+data[7,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
+  mu83ms_25deg <- qnorm(data[8,2]/(data[8,1]+data[8,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
+  mu83ms_color <- qnorm(data[19,2]/(data[19,1]+data[19,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
+  mu117ms<-  mu83ms_9deg*2
+  mu150ms <- mu83ms_9deg*3
+  sigma117ms <- 1
+  sigma150ms <- 1
+  cri <- 4
   
   guess <- c(mu83ms_9deg, mu83ms_13deg, mu83ms_17deg, mu83ms_21deg, mu83ms_25deg, mu83ms_color, mu117ms, mu150ms, sigma117ms, sigma150ms, cri)
   
@@ -163,7 +163,7 @@ uvsdt_logL <- function(x, inputs) {
   
   
   logL <- -logL
-  return(logL)
+  return(-logL)
   #if (1 < par[3] & par[3] < par[4] & par[4] < par[5] & par[5] < par[6] & par[7] < par[8] & par[8] < par[9] & par[9]< par[10] & par[10]< par[11] & par[12] < par[13] & par[13] < par[14] & par[14] < par[15] & par[15] < par[16]) {
   #logL <- -logL　#対数尤度を対数損失にする
   #return(logL)
