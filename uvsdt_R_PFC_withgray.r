@@ -1,6 +1,5 @@
 library(tidyverse)
 
-
 dat <- read.table("subdata.csv", header=T,sep=",") 
 
 result = dat %>%             
@@ -8,7 +7,6 @@ result = dat %>%
   select(subnum, exposure, maskwidth, colorcond, TorF1, colorres, TorF2, gray_gray, gray_mix, gray_color, mix_gray, mix_mix, mix_color, color_gray, color_mix, color_color) %>%    
   group_by(subnum, colorcond, exposure, maskwidth) %>%                
   summarize(gray_gray= sum(gray_gray), gray_mix= sum(gray_mix), gray_color= sum(gray_color), mix_gray= sum(mix_gray), mix_mix= sum(mix_mix), mix_color= sum(mix_color), color_gray= sum(color_gray), color_mix= sum(color_mix), color_color= sum(color_color)) #%>%       
-#print()  
 
 
 ### Function for model fitting
@@ -59,6 +57,54 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   
   logL <- -fit$value
   
+  AIC <- -2 * logL + 2 * 11
+  
+  predicted_data <- matrix(c(rep(1,21)), nrow=21, ncol=2)
+  ##############################################################################
+  # model predictions
+  predicted_data <- matrix(NA, nrow=21, ncol=2)
+  #gray
+  mean_one_mat <- c(mu83ms_gray, mu83ms_gray*mu117ms, mu83ms_gray*mu150ms)
+  sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
+  for (cond in 1:3) {
+    pred_gray_others_rate <- pnorm(cri, mean= mean_one_mat[cond], sd=sigmamat[cond])
+    pred_gray_color_rate <- 1-pred_gray_others_rate
+    
+    #反応数
+    pred_nr_gray_color <- sum(data[cond,1]+data[cond,2]) * pred_gray_color_rate
+    pred_nr_gray_others <- sum(data[cond,1]+data[cond,2]) * pred_gray_others_rate
+    predicted_data[cond,1] <- pred_gray_others_rate
+    predicted_data[cond,2] <- pred_gray_color_rate
+  }
+  
+  #chimera
+  mean_one_mat <- c(mu83ms_9deg,mu83ms_13deg,mu83ms_17deg,mu83ms_21deg,mu83ms_25deg, mu83ms_9deg*mu117ms,mu83ms_13deg*mu117ms,mu83ms_17deg*mu117ms,mu83ms_21deg*mu117ms,mu83ms_25deg*mu117ms, mu83ms_9deg*mu150ms,mu83ms_13deg*mu150ms,mu83ms_17deg*mu150ms,mu83ms_21deg*mu150ms,mu83ms_25deg*mu150ms)
+  sigmamat <- c(rep(sigma83ms,5),rep(sigma117ms,5),rep(sigma150ms,5))
+  for (cond in 4:18) {
+    pred_chimera_others_rate <- pnorm(cri, mean=mean_one_mat[cond-3], sd=sigmamat[cond-3])
+    pred_chimera_color_rate <-1-pred_chimera_others_rate
+    #反応数
+    pred_nr_chimera_color <- sum(data[cond,1]+data[cond,2]) *pred_chimera_color_rate
+    pred_nr_chimera_others <- sum(data[cond,1]+data[cond,2]) * pred_chimera_others_rate
+    predicted_data[cond,1] <- pred_chimera_others_rate
+    predicted_data[cond,2] <- pred_chimera_color_rate
+  }
+  
+  #color
+  mean_two_mat <- c(mu83ms_color,mu83ms_color*mu117ms,mu83ms_color*mu150ms)
+  sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
+  for (cond in 19:21) {
+    pred_color_others_rate <- pnorm(cri, mean=mean_two_mat[cond-18], sd=sigmamat[cond-18])
+    pred_color_color_rate <- 1-pred_color_others_rate
+    #反応数
+    pred_nr_color_color <- sum(data[cond,1]+data[cond,2]) * pred_color_color_rate
+    pred_nr_color_others <- sum(data[cond,1]+data[cond,2]) * pred_color_others_rate
+    predicted_data[cond,1] <- pred_color_others_rate
+    predicted_data[cond,2] <- pred_color_color_rate
+  }
+  ##############################################################################
+  
+  
   est <- data.frame(mu83ms_9deg   = mu83ms_9deg, 
                     mu83ms_13deg  = mu83ms_13deg, 
                     mu83ms_17deg  = mu83ms_17deg, 
@@ -70,7 +116,8 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
                     sigma117ms = sigma117ms,
                     sigma150ms = sigma150ms,
                     cri = cri, 
-                    logL = logL)
+                    logL = logL,
+                    AIC = AIC)
   return(list(est,predicted_data))
 }
 
@@ -155,12 +202,15 @@ uvsdt_logL <- function(x, inputs) {
 
 
 estimates <- c()
+predicted_array <- array(NA, dim = c(21, 2, 44))
+data_rate_array <- array(NA, dim = c(21, 2, 44))
+
 for (i in 4:47) {
   
   sub <- i
   
   #データ成型
-  subdata <- result[((sub-1)*21+1):((sub-1)*21+21), ]
+  subdata <- result[((sub-4)*21+1):((sub-4)*21+21), ]
   data <- matrix(NA, nrow=21, ncol=2)
   #gray
   data[1:3,1]<-unlist(subdata[1:3,5]+subdata[1:3,6])#_others
@@ -172,19 +222,27 @@ for (i in 4:47) {
   data[19:21,1]<-unlist(subdata[19:21,11]+subdata[19:21,12])#_others
   data[19:21,2]<-unlist(subdata[19:21,13])#_color
   
+  data_rate_array[,1,(sub-3)]<-data[,1]/(data[,1]+data[,2])
+  data_rate_array[,2,(sub-3)]<-data[,2]/(data[,1]+data[,2])
+  
   #基準となるパラメータ
   sigma83ms <- 1
   mu83ms_gray <- 0
   
   ### Fitting
-  predicted_data <- matrix(NA, nrow=21, ncol=2)
+
   fit <- fit_uvsdt_mle(data, add_constant = TRUE)
   df <- fit[[1]]
   df$sub <- i
   estimates <- rbind(estimates, df)
+  a <- fit[[2]]
+  predicted_array[,,(sub-3)] <- a
 }
 
 ###################################
 #mean+variance,mean,variance
 ###################################
+predicted_array[,,1]
+data_rate_array[,,1]
+
 
