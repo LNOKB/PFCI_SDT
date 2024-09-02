@@ -1,5 +1,5 @@
-##color, chimera, grayscale #途中
 library(tidyverse)
+
 
 dat <- read.table("subdata.csv", header=T,sep=",") 
 
@@ -10,26 +10,6 @@ result = dat %>%
   summarize(gray_gray= sum(gray_gray), gray_mix= sum(gray_mix), gray_color= sum(gray_color), mix_gray= sum(mix_gray), mix_mix= sum(mix_mix), mix_color= sum(mix_color), color_gray= sum(color_gray), color_mix= sum(color_mix), color_color= sum(color_color)) #%>%       
 #print()  
 
-#for (sub in 4:47) {
-
-sub <- 1
-
-#データ成型
-subdata <- result[((sub-1)*18+1):((sub-1)*18+18), ]
-data <- matrix(NA, nrow=21, ncol=2)
-#gray
-data[1:3,1]<-unlist(result[1:3,5]+result[1:3,6])#_others
-data[1:3,2]<-unlist(result[1:3,7])#_color
-#chimera
-data[4:18,1]<-unlist(result[4:18,8]+result[4:18,9])#_others
-data[4:18,2]<-unlist(result[4:18,10])#_color
-#color
-data[19:21,1]<-unlist(result[19:21,11]+result[19:21,12])#_others
-data[19:21,2]<-unlist(result[19:21,13])#_color
-
-#基準となるパラメータ
-sigma83ms <- 1
-mu83ms_gray <- 0
 
 ### Function for model fitting
 fit_uvsdt_mle <- function(data, add_constant = TRUE) {
@@ -41,28 +21,16 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   }
   
   # initial guess for parameter values d-primeベースで出す
-  #mu83ms_9deg <- 1.1
-  #mu83ms_13deg <- 2
-  #mu83ms_17deg <- 3 
-  #mu83ms_21deg <- 4
-  #mu83ms_25deg <- 5
-  #mu83ms_color <- 6
-  #mu117ms<-  2
-  #mu150ms <- 3
-  #sigma117ms <- 1.5
-  #sigma150ms <- 2
-  #cri <- 1
-  
-  mu83ms_9deg <-qnorm(data[4,2]/(data[4,1]+data[4,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
-  mu83ms_13deg <-qnorm(data[5,2]/(data[5,1]+data[5,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
+  mu83ms_9deg  <- qnorm(data[4,2]/(data[4,1]+data[4,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
+  mu83ms_13deg <- qnorm(data[5,2]/(data[5,1]+data[5,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
   mu83ms_17deg <- qnorm(data[6,2]/(data[6,1]+data[6,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
   mu83ms_21deg <- qnorm(data[7,2]/(data[7,1]+data[7,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
   mu83ms_25deg <- qnorm(data[8,2]/(data[8,1]+data[8,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
   mu83ms_color <- qnorm(data[19,2]/(data[19,1]+data[19,2]))-qnorm(data[1,2]/(data[1,1]+data[1,2]))
-  mu117ms <-  1.2
-  mu150ms <-  1.2
-  sigma117ms <- 0.9
-  sigma150ms <- 0.9
+  mu117ms <- 1
+  mu150ms <- 1
+  sigma117ms <- 1
+  sigma150ms <- 1
   cri <- 2
   
   guess <- c(mu83ms_9deg, mu83ms_13deg, mu83ms_17deg, mu83ms_21deg, mu83ms_25deg, mu83ms_color, mu117ms, mu150ms, sigma117ms, sigma150ms, cri)
@@ -70,13 +38,14 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   # model fit
   fit <- suppressWarnings(optim(uvsdt_logL, 
                                 par = guess, 
-                                lower =      c(0.10, 0.15, 0.20, 0.25, 0.30,  1,   0.5, 0.5, 0.5, 0.5, 1),
-                                upper =      c(2,   3,    3,   3,    3,   3,  1.5, 1.5, 1.5, 1.5, 3.5), 
-                                gr = NULL, method = "BFGS", control = list("maxit" = 10000, 
-                                                                           "parscale" = c(1,   1,    1,   1,    1,   1,  0.001,  0.001,  0.001,  0.001,  1))))
+                                lower =      c(0.1, 0.1, 0.1, 0.1, 0.1, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5),
+                                upper =      c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, 2.0, 2.0, 5.0), 
+                                gr = NULL, method = "BFGS", 
+                                control = list("maxit" = 10000, 
+                                               "parscale" = c(1,   1,    1,   1,    1,   1,  0.001,  0.001,  0.001,  0.001,  1))))
   
   # outputs
-  mu83ms_9deg <- fit$par[1]
+  mu83ms_9deg  <- fit$par[1]
   mu83ms_13deg <- fit$par[2] 
   mu83ms_17deg <- fit$par[3] 
   mu83ms_21deg <- fit$par[4] 
@@ -110,7 +79,7 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
 uvsdt_logL <- function(x, inputs) {
   
   # target parameters
-  mu83ms_9deg <- x[1]
+  mu83ms_9deg  <- x[1]
   mu83ms_13deg <- x[2] 
   mu83ms_17deg <- x[3] 
   mu83ms_21deg <- x[4] 
@@ -136,7 +105,7 @@ uvsdt_logL <- function(x, inputs) {
     pred_nr_gray_color <- sum(data[cond,1]+data[cond,2]) * pred_gray_color_rate
     pred_nr_gray_others <- sum(data[cond,1]+data[cond,2]) * pred_gray_others_rate
     predicted_data[cond,1] <- pred_gray_others_rate
-    predicted_data[cond,2] <-pred_gray_color_rate
+    predicted_data[cond,2] <- pred_gray_color_rate
   }
   
   #chimera
@@ -156,23 +125,21 @@ uvsdt_logL <- function(x, inputs) {
   mean_two_mat <- c(mu83ms_color,mu83ms_color*mu117ms,mu83ms_color*mu150ms)
   sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
   for (cond in 19:21) {
-    pred_color_others_rate <- pnorm(cri, mean=mean_one_mat[cond-18], sd=sigmamat[cond-18])
+    pred_color_others_rate <- pnorm(cri, mean=mean_two_mat[cond-18], sd=sigmamat[cond-18])
     pred_color_color_rate <- 1-pred_color_others_rate
     #反応数
     pred_nr_color_color <- sum(data[cond,1]+data[cond,2]) * pred_color_color_rate
     pred_nr_color_others <- sum(data[cond,1]+data[cond,2]) * pred_color_others_rate
     predicted_data[cond,1] <- pred_color_others_rate
-    predicted_data[cond,2] <-pred_color_color_rate
+    predicted_data[cond,2] <- pred_color_color_rate
   }
   ##############################################################################
   
-  
-  # log likelihood 
+  # log likelihood
   logL <- sum(data * log(predicted_data))
   if (is.nan(logL)) {
     logL <- -Inf
   }
-  
   
   logL <- -logL
   return(logL)
@@ -184,12 +151,38 @@ uvsdt_logL <- function(x, inputs) {
   # return(999999)
   #}
   
-  
 }
 
-### Fitting
-fit <- fit_uvsdt_mle(data, add_constant = TRUE)
-fit
+
+estimates <- c()
+for (i in 4:47) {
+  
+  sub <- i
+  
+  #データ成型
+  subdata <- result[((sub-1)*21+1):((sub-1)*21+21), ]
+  data <- matrix(NA, nrow=21, ncol=2)
+  #gray
+  data[1:3,1]<-unlist(subdata[1:3,5]+subdata[1:3,6])#_others
+  data[1:3,2]<-unlist(subdata[1:3,7])#_color
+  #chimera
+  data[4:18,1]<-unlist(subdata[4:18,8]+subdata[4:18,9])#_others
+  data[4:18,2]<-unlist(subdata[4:18,10])#_color
+  #color
+  data[19:21,1]<-unlist(subdata[19:21,11]+subdata[19:21,12])#_others
+  data[19:21,2]<-unlist(subdata[19:21,13])#_color
+  
+  #基準となるパラメータ
+  sigma83ms <- 1
+  mu83ms_gray <- 0
+  
+  ### Fitting
+  predicted_data <- matrix(NA, nrow=21, ncol=2)
+  fit <- fit_uvsdt_mle(data, add_constant = TRUE)
+  df <- fit[[1]]
+  df$sub <- i
+  estimates <- rbind(estimates, df)
+}
 
 ###################################
 #mean+variance,mean,variance
