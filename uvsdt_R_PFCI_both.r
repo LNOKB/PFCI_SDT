@@ -8,6 +8,9 @@ result = dat %>%
   group_by(subnum, colorcond, exposure, maskwidth) %>%                
   summarize(gray_gray= sum(gray_gray), gray_mix= sum(gray_mix), gray_color= sum(gray_color), mix_gray= sum(mix_gray), mix_mix= sum(mix_mix), mix_color= sum(mix_color), color_gray= sum(color_gray), color_mix= sum(color_mix), color_color= sum(color_color)) #%>%       
 
+#基準となるパラメータ
+sigma83ms <- 1
+mu83ms_gray <- 0
 
 ### Function for model fitting
 fit_uvsdt_mle <- function(data, add_constant = TRUE) {
@@ -224,10 +227,7 @@ for (i in 4:47) {
   
   data_rate_array[,1,(sub-3)]<-data[,1]/(data[,1]+data[,2])
   data_rate_array[,2,(sub-3)]<-data[,2]/(data[,1]+data[,2])
-  
-  #基準となるパラメータ
-  sigma83ms <- 1
-  mu83ms_gray <- 0
+
   
   ### Fitting
 
