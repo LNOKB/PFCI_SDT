@@ -201,7 +201,7 @@ uvsdt_logL <- function(x, inputs) {
 
 
 estimates <- c()
-predicted_array_variance <- array(NA, dim = c(21, 2, 44))
+predicted_array <- array(NA, dim = c(21, 2, 44))
 data_rate_array <- array(NA, dim = c(21, 2, 44))
 
 for (i in 4:47) {
@@ -230,9 +230,9 @@ for (i in 4:47) {
   fit <- fit_uvsdt_mle(data, add_constant = TRUE)
   df <- fit[[1]]
   df$sub <- i
-  estimates_variance <- rbind(estimates, df)
+  estimates <- rbind(estimates, df)
   a <- fit[[2]]
-  predicted_array_variance[,,(sub-3)] <- a
+  predicted_array[,,(sub-3)] <- a
 }
 
 ###################################
