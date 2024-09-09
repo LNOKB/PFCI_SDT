@@ -243,9 +243,12 @@ predicted_array[,,1]
 data_rate_array[,,1]
 
 
+
 #mean+variance,mean,variance,nullの検定
+
+
 for (i in 1:4){
-  now <- estimates[,i+6] #logをとるべきかも
+  now <- estimates[,i+6]
   t_test_equal1 <- t.test(now, mu = 1)
   t_test_below1 <- t.test(now, mu = 1, alternative = "less")
   t_test_above1 <- t.test(now, mu = 1, alternative = "greater")
@@ -254,7 +257,28 @@ for (i in 1:4){
   print(t_test_above1)
 }
 
+library(ggplot2)
+data <- data.frame(
+  Group = c("λ117ms", "λ150ms", "σ117ms", "σ150ms"),
+  Mean = c(mean(estimates[,7]), mean(estimates[,8]), mean(estimates[,9]), mean(estimates[,10])),
+  SD = c(sd(estimates[,7]), sd(estimates[,8]), sd(estimates[,9]), sd(estimates[,10])),
+  N = c(44, 44, 44, 44)  # 各グループのサンプルサイズ (N)
+)
 
+# 標準誤差 (SE) の計算
+data$SE <- data$SD / sqrt(data$N)
+
+data$Mean <- log(data$Mean)
+data$SD <- log(data$SD)
+
+# グラフの作成
+ggplot(data, aes(x = Group, y = Mean)) +
+  geom_bar(stat = "identity", fill = "skyblue", width = 0.6) +  # 棒グラフの描画
+  geom_errorbar(aes(ymin = Mean - SE, ymax = Mean + SE), width = 0.2) +  # エラーバーの追加
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  labs(title = "Value of each parameter") +
+  theme_minimal()
+  #+coord_cartesian(ylim = c(0, 1.2))
 
 
 
