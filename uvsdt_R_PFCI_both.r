@@ -248,37 +248,38 @@ data_rate_array[,,1]
 
 
 for (i in 1:4){
-  now <- estimates[,i+6]
-  t_test_equal1 <- t.test(now, mu = 1)
-  t_test_below1 <- t.test(now, mu = 1, alternative = "less")
-  t_test_above1 <- t.test(now, mu = 1, alternative = "greater")
-  print(t_test_equal1)
+  now <- log(estimates[,i+6])
+  #now <- estimates[,i+6]
+  t_test_below1 <- t.test(now, mu = 0, alternative = "less")
+  t_test_above1 <- t.test(now, mu = 0, alternative = "greater")
   print(t_test_below1)
   print(t_test_above1)
 }
 
 library(ggplot2)
 data <- data.frame(
-  Group = c("λ117ms", "λ150ms", "σ117ms", "σ150ms"),
-  Mean = c(mean(estimates[,7]), mean(estimates[,8]), mean(estimates[,9]), mean(estimates[,10])),
-  SD = c(sd(estimates[,7]), sd(estimates[,8]), sd(estimates[,9]), sd(estimates[,10])),
-  N = c(44, 44, 44, 44)  # 各グループのサンプルサイズ (N)
+  Parameters = rep(c("λ117ms", "λ150ms", "σ117ms", "σ150ms"), each = 44),
+  Value = c(estimates[,7], estimates[,8], estimates[,9], estimates[,10])
 )
-
-# 標準誤差 (SE) の計算
-data$SE <- data$SD / sqrt(data$N)
-
-data$Mean <- log(data$Mean)
-data$SD <- log(data$SD)
+data$Value <- log(data$Value)
 
 # グラフの作成
-ggplot(data, aes(x = Group, y = Mean)) +
-  geom_bar(stat = "identity", fill = "skyblue", width = 0.6) +  # 棒グラフの描画
-  geom_errorbar(aes(ymin = Mean - SE, ymax = Mean + SE), width = 0.2) +  # エラーバーの追加
-  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
-  labs(title = "Value of each parameter") +
-  theme_minimal()
-  #+coord_cartesian(ylim = c(0, 1.2))
+ggplot(data, aes(x = Parameters, y = Value)) +
+  geom_violin(fill = "skyblue", color = "black") +  # ヴァイオリンプロットの描画
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +  # y = 1 の位置に横線を追加
+  labs(x = "Parameters",
+       y = "Value") +
+  coord_cartesian(ylim = c(-1, 1)) +  # y軸の範囲を0から1.2に)設定
+  stat_summary(fun = mean, geom = "point", 
+               shape =16, size = 2, color = "black")+
+  theme_classic() +  # テーマの設定
+  theme(
+    plot.title = element_text(size = 20 * 2),    # タイトルのサイズを5倍に
+    axis.title.x = element_text(size = 14 * 2),  # x軸ラベルのサイズを5倍に
+    axis.title.y = element_text(size = 14 * 2),  # y軸ラベルのサイズを5倍に
+    axis.text.x = element_text(size = 11 * 2),   # x軸目盛りのサイズを5倍に
+    axis.text.y = element_text(size = 11 * 2)    # y軸目盛りのサイズを5倍に
+  )
 
 
 
