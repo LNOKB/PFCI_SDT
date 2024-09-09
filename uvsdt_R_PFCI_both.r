@@ -239,10 +239,22 @@ for (i in 4:47) {
   predicted_array[,,(sub-3)] <- a
 }
 
-###################################
-#mean+variance,mean,variance
-###################################
 predicted_array[,,1]
 data_rate_array[,,1]
+
+
+#mean+variance,mean,variance,nullの検定
+for (i in 1:4){
+  now <- estimates[,i+6] #logをとるべきかも
+  t_test_equal1 <- t.test(now, mu = 1)
+  t_test_below1 <- t.test(now, mu = 1, alternative = "less")
+  t_test_above1 <- t.test(now, mu = 1, alternative = "greater")
+  print(t_test_equal1)
+  print(t_test_below1)
+  print(t_test_above1)
+}
+
+
+
 
 
