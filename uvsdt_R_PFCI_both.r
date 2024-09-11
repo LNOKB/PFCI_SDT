@@ -283,3 +283,61 @@ ggplot(data, aes(x = Parameters, y = Value)) +
 
 
 
+# 参加者ごとの結果の図示
+pickup_sub <- 1
+library(ggplot2)
+
+plot_sdt_distributions <- function(means, sds, attention_levels, image_types, colors) {
+  data <- data.frame()
+  
+  for (i in 1:length(attention_levels)) {
+    for (j in 1:length(image_types)) {
+      x <- seq(means[i,j] - 3 * sds[i,j], means[i,j] + 3 * sds[i,j], length.out = 100)
+      y <- dnorm(x, mean = means[i,j], sd = sds[i,j])
+      
+      # データフレームに追加
+      data <- rbind(data, data.frame(
+        x = x,
+        y = y,
+        Attention = attention_levels[i],
+        ImageType = image_types[j],
+        color = colors[j]
+      ))
+    }
+  }
+  
+  # プロットを描画
+  p <- ggplot(data, aes(x = x, y = y, color = ImageType)) +
+    geom_line(size = 1.2) +
+    scale_color_manual(values = colors) +
+    labs(title = "Signal Detection Theory Distributions",
+         x = "Strength of Sensory Signal",
+         y = "Density") +
+    geom_vline(xintercept = estimates[pickup_sub,11], linetype = "dashed", color = "black") + 
+    facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  # 各注意条件で分布を重ねる
+    theme_minimal() +
+    theme(legend.position = "top")
+  
+  print(p)
+}
+
+# 平均値と標準偏差（例）
+ means_83ms <- c(mu83ms_gray, estimates[pickup_sub,1], estimates[pickup_sub,2], estimates[pickup_sub,3], estimates[pickup_sub,4], estimates[pickup_sub,5], estimates[pickup_sub,6])  
+ means_117ms <- means_83ms * estimates[pickup_sub,7]
+ means_150ms <- means_83ms * estimates[pickup_sub,8]
+ means <- rbind(means_83ms,means_117ms,means_150ms)
+ sd_83ms <- c(rep(sigma83ms, 7))  
+ sd_117ms <- c(rep(estimates[pickup_sub,9], 7))  
+ sd_150ms <- c(rep(estimates[pickup_sub,10], 7))  
+ sds <- rbind(sd_83ms,sd_117ms,sd_150ms)
+# 注意レベル（例）
+attention_levels <- c("0_83ms", "1_117ms", "2_150ms")
+
+# 画像タイプ（例）
+image_types <- c("0_gray", "1_9deg", "2_13deg", "3_17deg", "4_21deg", "5_25deg", "6_color")
+
+# カラー（例）
+colors <- c("grey", "mistyrose", "pink", "salmon", "orangered2","red", "brown")
+
+# 関数を呼び出してプロットを作成
+plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
