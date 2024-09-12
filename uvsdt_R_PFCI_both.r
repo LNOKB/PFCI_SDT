@@ -242,7 +242,10 @@ for (i in 4:47) {
 predicted_array[,,1]
 data_rate_array[,,1]
 
-
+mean_predicted <- apply(predicted_array, c(1, 2), mean)*100
+mean_predicted2 <- c(mean_predicted[1,2],mean_predicted[4:8,2],mean_predicted[19,2],mean_predicted[2,2],mean_predicted[9:13,2],mean_predicted[20,2],mean_predicted[3,2],mean_predicted[14:18,2],mean_predicted[21,2])
+mean_data <-  apply(data_rate_array, c(1, 2), mean)*100
+mean_data2 <- rbind(mean_data[1,],mean_data[4:8,],mean_data[19,],mean_data[2,],mean_data[9:13,],mean_data[20,],mean_data[3,],mean_data[14:18,],mean_data[21,])
 
 #mean+variance,mean,variance,nullの検定
 
@@ -306,7 +309,6 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     }
   }
   
-  # プロットを描画
   p <- ggplot(data, aes(x = x, y = y, color = ImageType)) +
     geom_line(size = 1.2) +
     scale_color_manual(values = colors) +
@@ -321,7 +323,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
   print(p)
 }
 
-# 平均値と標準偏差（例）
+# 平均値と標準偏差
  means_83ms <- c(mu83ms_gray, estimates[pickup_sub,1], estimates[pickup_sub,2], estimates[pickup_sub,3], estimates[pickup_sub,4], estimates[pickup_sub,5], estimates[pickup_sub,6])  
  means_117ms <- means_83ms * estimates[pickup_sub,7]
  means_150ms <- means_83ms * estimates[pickup_sub,8]
@@ -330,14 +332,57 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
  sd_117ms <- c(rep(estimates[pickup_sub,9], 7))  
  sd_150ms <- c(rep(estimates[pickup_sub,10], 7))  
  sds <- rbind(sd_83ms,sd_117ms,sd_150ms)
-# 注意レベル（例）
+ 
 attention_levels <- c("0_83ms", "1_117ms", "2_150ms")
-
-# 画像タイプ（例）
 image_types <- c("0_gray", "1_9deg", "2_13deg", "3_17deg", "4_21deg", "5_25deg", "6_color")
-
-# カラー（例）
 colors <- c("grey", "mistyrose", "pink", "salmon", "orangered2","red", "brown")
 
-# 関数を呼び出してプロットを作成
+# 関数を呼び出し
 plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
+
+
+
+#########積み上げグラフでの比較######################################
+# のデータを作成
+data_stackedbar <- data.frame(
+  Degree = factor(rep(c("gray","9deg", "13deg", "17deg", "21deg", "25deg", "color"), each = 2), 
+                  levels = c("gray", "9deg", "13deg", "17deg", "21deg", "25deg", "color")),
+  Type = rep(c("0_others","1_full-color"), 7),
+  Frequency =  as.vector(t(mean_data2)),
+  Condition = factor(rep(c("83ms", "117ms", "150ms"), each = 14), 
+                     levels = c("83ms", "117ms", "150ms"))
+)
+
+# 予測値のデータフレームを作成（仮の予測値）
+predicted_data_stackedbar <- data.frame(
+  Degree = factor(c("gray","9deg", "13deg", "17deg", "21deg", "25deg", "color"),
+                  levels = c("gray", "9deg", "13deg", "17deg", "21deg", "25deg", "color")),
+  Type = rep(c("1_full-color"), 7),
+  Predicted = as.vector(t(mean_predicted2)),  # 仮の予測値
+  Condition = factor(rep(c("83ms", "117ms", "150ms"), each = 7), 
+                     levels = c("83ms", "117ms", "150ms"))
+)
+
+# グラフの作成
+ggplot(data_stackedbar, aes(x = Degree, y = Frequency, fill = Type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = NULL, y = "frequency(%)") +
+  theme_minimal() +
+  scale_fill_manual(values = c("1_full-color" = "gray50","0_others" = "gray80" )) +
+  facet_grid(. ~ Condition) +  
+  geom_point(data = predicted_data_stackedbar, aes(x = Degree, y = Predicted), 
+             color = "red", size = 3) +  # モデルの予測値を示す点を追加
+  theme(legend.position = "right")+  # テーマの設定
+  theme(
+    plot.title = element_text(size = 20 * 2),    # タイトルのサイズを5倍に
+    axis.title.x = element_text(size = 14 * 2),  # x軸ラベルのサイズを5倍に
+    axis.title.y = element_text(size = 14 * 2),  # y軸ラベルのサイズを5倍に
+    axis.text.x = element_text(size = 8 * 2),   # x軸目盛りのサイズを5倍に
+    axis.text.y = element_text(size = 11 * 2),    # y軸目盛りのサイズを5倍に
+    legend.position = "right",
+    strip.text = element_text(size = 18),  # 83ms、117ms、150msの文字サイズを大きくする
+    legend.text = element_text(size = 18),  # 凡例の文字サイズを大きくする
+    legend.title = element_text(size = 18)  # 凡例タイトルの文字サイズを大きくする
+    )
+
+
