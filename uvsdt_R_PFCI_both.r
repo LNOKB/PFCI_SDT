@@ -235,54 +235,54 @@ for (i in 4:47) {
   data_rate_add[,1,(sub-3)]<-(data[,1]+0.5)/((data[,1]+0.5)+(data[,2]+0.5))
   data_rate_add[,2,(sub-3)]<-(data[,2]+0.5)/((data[,1]+0.5)+(data[,2]+0.5))
   
-  #########カラーをS2分布としたd'やCの算出[グレーをS1分布とすべき？]############################################################
+  #########グレーをS1分布としたd'やCの算出############################################################
   
-  dprime_gr_83 <-  qnorm(data_rate_add[19,2,(sub-3)])-qnorm(data_rate_add[1,2,(sub-3)])
-  dprime_gr_117 <- qnorm(data_rate_add[20,2,(sub-3)])-qnorm(data_rate_add[2,2,(sub-3)])
-  dprime_gr_150 <- qnorm(data_rate_add[21,2,(sub-3)])-qnorm(data_rate_add[3,2,(sub-3)])
+  dprime_co_83 <-  qnorm(data_rate_add[19,2,(sub-3)])-qnorm(data_rate_add[1,2,(sub-3)]) #z(color_color)-z(gray_color)
+  dprime_co_117 <- qnorm(data_rate_add[20,2,(sub-3)])-qnorm(data_rate_add[2,2,(sub-3)])
+  dprime_co_150 <- qnorm(data_rate_add[21,2,(sub-3)])-qnorm(data_rate_add[3,2,(sub-3)])
   
-  dprime_9d_83<-  qnorm(data_rate_add[19,2,(sub-3)])-qnorm(data_rate_add[4,2,(sub-3)])
-  dprime_13d_83<- qnorm(data_rate_add[19,2,(sub-3)])-qnorm(data_rate_add[5,2,(sub-3)])
-  dprime_17d_83<- qnorm(data_rate_add[19,2,(sub-3)])-qnorm(data_rate_add[6,2,(sub-3)])
-  dprime_21d_83<- qnorm(data_rate_add[19,2,(sub-3)])-qnorm(data_rate_add[7,2,(sub-3)])
-  dprime_25d_83<- qnorm(data_rate_add[19,2,(sub-3)])-qnorm(data_rate_add[8,2,(sub-3)])
+  dprime_9d_83<-  qnorm(data_rate_add[4,2,(sub-3)])-qnorm(data_rate_add[1,2,(sub-3)])#z(chimera_color)-z(gray_color)
+  dprime_13d_83<- qnorm(data_rate_add[5,2,(sub-3)])-qnorm(data_rate_add[1,2,(sub-3)])
+  dprime_17d_83<- qnorm(data_rate_add[6,2,(sub-3)])-qnorm(data_rate_add[1,2,(sub-3)])
+  dprime_21d_83<- qnorm(data_rate_add[7,2,(sub-3)])-qnorm(data_rate_add[1,2,(sub-3)])
+  dprime_25d_83<- qnorm(data_rate_add[8,2,(sub-3)])-qnorm(data_rate_add[1,2,(sub-3)])
   
-  dprime_9d_117<-  qnorm(data_rate_add[20,2,(sub-3)])-qnorm(data_rate_add[9,2,(sub-3)])
-  dprime_13d_117<- qnorm(data_rate_add[20,2,(sub-3)])-qnorm(data_rate_add[10,2,(sub-3)])
-  dprime_17d_117<- qnorm(data_rate_add[20,2,(sub-3)])-qnorm(data_rate_add[11,2,(sub-3)])
-  dprime_21d_117<- qnorm(data_rate_add[20,2,(sub-3)])-qnorm(data_rate_add[12,2,(sub-3)])
-  dprime_25d_117<- qnorm(data_rate_add[20,2,(sub-3)])-qnorm(data_rate_add[13,2,(sub-3)])
+  dprime_9d_117<-  qnorm(data_rate_add[9,2,(sub-3)])-qnorm(data_rate_add[2,2,(sub-3)])
+  dprime_13d_117<- qnorm(data_rate_add[10,2,(sub-3)])-qnorm(data_rate_add[2,2,(sub-3)])
+  dprime_17d_117<- qnorm(data_rate_add[11,2,(sub-3)])-qnorm(data_rate_add[2,2,(sub-3)])
+  dprime_21d_117<- qnorm(data_rate_add[12,2,(sub-3)])-qnorm(data_rate_add[2,2,(sub-3)])
+  dprime_25d_117<- qnorm(data_rate_add[13,2,(sub-3)])-qnorm(data_rate_add[2,2,(sub-3)])
   
-  dprime_9d_150<-  qnorm(data_rate_add[21,2,(sub-3)])-qnorm(data_rate_add[14,2,(sub-3)])
-  dprime_13d_150<- qnorm(data_rate_add[21,2,(sub-3)])-qnorm(data_rate_add[15,2,(sub-3)])
-  dprime_17d_150<- qnorm(data_rate_add[21,2,(sub-3)])-qnorm(data_rate_add[16,2,(sub-3)])
-  dprime_21d_150<- qnorm(data_rate_add[21,2,(sub-3)])-qnorm(data_rate_add[17,2,(sub-3)])
-  dprime_25d_150<- qnorm(data_rate_add[21,2,(sub-3)])-qnorm(data_rate_add[18,2,(sub-3)])
+  dprime_9d_150<-  qnorm(data_rate_add[14,2,(sub-3)])-qnorm(data_rate_add[3,2,(sub-3)])
+  dprime_13d_150<- qnorm(data_rate_add[15,2,(sub-3)])-qnorm(data_rate_add[3,2,(sub-3)])
+  dprime_17d_150<- qnorm(data_rate_add[16,2,(sub-3)])-qnorm(data_rate_add[3,2,(sub-3)])
+  dprime_21d_150<- qnorm(data_rate_add[17,2,(sub-3)])-qnorm(data_rate_add[3,2,(sub-3)])
+  dprime_25d_150<- qnorm(data_rate_add[18,2,(sub-3)])-qnorm(data_rate_add[3,2,(sub-3)])
   
-  C_gr_83 <- -0.5 * (qnorm(data_rate_add[1,2,(sub-3)])+qnorm(data_rate_add[19,2,(sub-3)]))
-  C_gr_117 <- -0.5 * (qnorm(data_rate_add[2,2,(sub-3)])+qnorm(data_rate_add[20,2,(sub-3)]))
-  C_gr_150 <- -0.5 * (qnorm(data_rate_add[3,2,(sub-3)])+qnorm(data_rate_add[21,2,(sub-3)]))
+  C_co_83 <- -0.5 * (qnorm(data_rate_add[19,2,(sub-3)])+qnorm(data_rate_add[1,2,(sub-3)]))
+  C_co_117 <- -0.5 * (qnorm(data_rate_add[20,2,(sub-3)])+qnorm(data_rate_add[2,2,(sub-3)]))
+  C_co_150 <- -0.5 * (qnorm(data_rate_add[21,2,(sub-3)])+qnorm(data_rate_add[3,2,(sub-3)]))
   
-  C_9d_83<- -0.5 * (qnorm(data_rate_add[4,2,(sub-3)])+qnorm(data_rate_add[19,2,(sub-3)]))
-  C_13d_83<- -0.5 * (qnorm(data_rate_add[5,2,(sub-3)])+qnorm(data_rate_add[19,2,(sub-3)]))
-  C_17d_83<- -0.5 * (qnorm(data_rate_add[6,2,(sub-3)])+qnorm(data_rate_add[19,2,(sub-3)]))
-  C_21d_83<- -0.5 * (qnorm(data_rate_add[7,2,(sub-3)])+qnorm(data_rate_add[19,2,(sub-3)]))
-  C_25d_83<- -0.5 * (qnorm(data_rate_add[8,2,(sub-3)])+qnorm(data_rate_add[19,2,(sub-3)]))
+  C_9d_83<- -0.5 * (qnorm(data_rate_add[4,2,(sub-3)])+qnorm(data_rate_add[1,2,(sub-3)]))
+  C_13d_83<- -0.5 * (qnorm(data_rate_add[5,2,(sub-3)])+qnorm(data_rate_add[1,2,(sub-3)]))
+  C_17d_83<- -0.5 * (qnorm(data_rate_add[6,2,(sub-3)])+qnorm(data_rate_add[1,2,(sub-3)]))
+  C_21d_83<- -0.5 * (qnorm(data_rate_add[7,2,(sub-3)])+qnorm(data_rate_add[1,2,(sub-3)]))
+  C_25d_83<- -0.5 * (qnorm(data_rate_add[8,2,(sub-3)])+qnorm(data_rate_add[1,2,(sub-3)]))
   
-  C_9d_117<- -0.5 * (qnorm(data_rate_add[9,2,(sub-3)])+qnorm(data_rate_add[20,2,(sub-3)]))
-  C_13d_117<- -0.5 * (qnorm(data_rate_add[10,2,(sub-3)])+qnorm(data_rate_add[20,2,(sub-3)]))
-  C_17d_117<- -0.5 * (qnorm(data_rate_add[11,2,(sub-3)])+qnorm(data_rate_add[20,2,(sub-3)]))
-  C_21d_117<- -0.5 * (qnorm(data_rate_add[12,2,(sub-3)])+qnorm(data_rate_add[20,2,(sub-3)]))
-  C_25d_117<- -0.5 * (qnorm(data_rate_add[13,2,(sub-3)])+qnorm(data_rate_add[20,2,(sub-3)]))
+  C_9d_117<- -0.5 * (qnorm(data_rate_add[9,2,(sub-3)])+qnorm(data_rate_add[2,2,(sub-3)]))
+  C_13d_117<- -0.5 * (qnorm(data_rate_add[10,2,(sub-3)])+qnorm(data_rate_add[2,2,(sub-3)]))
+  C_17d_117<- -0.5 * (qnorm(data_rate_add[11,2,(sub-3)])+qnorm(data_rate_add[2,2,(sub-3)]))
+  C_21d_117<- -0.5 * (qnorm(data_rate_add[12,2,(sub-3)])+qnorm(data_rate_add[2,2,(sub-3)]))
+  C_25d_117<- -0.5 * (qnorm(data_rate_add[13,2,(sub-3)])+qnorm(data_rate_add[2,2,(sub-3)]))
   
-  C_9d_150<- -0.5 * (qnorm(data_rate_add[14,2,(sub-3)])+qnorm(data_rate_add[21,2,(sub-3)]))
-  C_13d_150<- -0.5 * (qnorm(data_rate_add[15,2,(sub-3)])+qnorm(data_rate_add[21,2,(sub-3)]))
-  C_17d_150<- -0.5 * (qnorm(data_rate_add[16,2,(sub-3)])+qnorm(data_rate_add[21,2,(sub-3)]))
-  C_21d_150<- -0.5 * (qnorm(data_rate_add[17,2,(sub-3)])+qnorm(data_rate_add[21,2,(sub-3)]))
-  C_25d_150<- -0.5 * (qnorm(data_rate_add[18,2,(sub-3)])+qnorm(data_rate_add[21,2,(sub-3)]))
+  C_9d_150<- -0.5 * (qnorm(data_rate_add[14,2,(sub-3)])+qnorm(data_rate_add[3,2,(sub-3)]))
+  C_13d_150<- -0.5 * (qnorm(data_rate_add[15,2,(sub-3)])+qnorm(data_rate_add[3,2,(sub-3)]))
+  C_17d_150<- -0.5 * (qnorm(data_rate_add[16,2,(sub-3)])+qnorm(data_rate_add[3,2,(sub-3)]))
+  C_21d_150<- -0.5 * (qnorm(data_rate_add[17,2,(sub-3)])+qnorm(data_rate_add[3,2,(sub-3)]))
+  C_25d_150<- -0.5 * (qnorm(data_rate_add[18,2,(sub-3)])+qnorm(data_rate_add[3,2,(sub-3)]))
   
-  dprime <- c(dprime_gr_83,dprime_gr_117,dprime_gr_150,dprime_9d_83,dprime_13d_83,dprime_17d_83,dprime_21d_83,dprime_25d_83,dprime_9d_117,dprime_13d_117,dprime_17d_117,dprime_21d_117,dprime_25d_117,dprime_9d_150,dprime_13d_150,dprime_17d_150,dprime_21d_150,dprime_25d_150)
-  C <- c(C_gr_83,C_gr_117,C_gr_150,C_9d_83,C_13d_83,C_17d_83,C_21d_83,C_25d_83,C_9d_117,C_13d_117,C_17d_117,C_21d_117,C_25d_117,C_9d_150,C_13d_150,C_17d_150,C_21d_150,C_25d_150)
+  dprime <- c(dprime_co_83,dprime_co_117,dprime_co_150,dprime_9d_83,dprime_13d_83,dprime_17d_83,dprime_21d_83,dprime_25d_83,dprime_9d_117,dprime_13d_117,dprime_17d_117,dprime_21d_117,dprime_25d_117,dprime_9d_150,dprime_13d_150,dprime_17d_150,dprime_21d_150,dprime_25d_150)
+  C <- c(C_co_83,C_co_117,C_co_150,C_9d_83,C_13d_83,C_17d_83,C_21d_83,C_25d_83,C_9d_117,C_13d_117,C_17d_117,C_21d_117,C_25d_117,C_9d_150,C_13d_150,C_17d_150,C_21d_150,C_25d_150)
   
   dprime_mat[,(sub-3)] <- dprime
   C_mat[,(sub-3)] <- C
@@ -330,7 +330,7 @@ ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
   geom_violin(fill = "skyblue", color = "black") +  # ヴァイオリンプロットの描画
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +  # y = 1 の位置に横線を追加
   labs(x = "Parameters",
-       y = "Value") +
+       y = "Log-scaled value") +
   coord_cartesian(ylim = c(-1, 1)) +  # y軸の範囲を0から1.2に)設定
   stat_summary(fun = mean, geom = "point", 
                shape =16, size = 2, color = "black")+
@@ -371,13 +371,13 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
   p <- ggplot(data_SDT_plot, aes(x = x, y = y, color = ImageType)) +
     geom_line(size = 1.2) +
     scale_color_manual(values = colors) +
-    labs(x = "Signal strength",
+    labs(x = "Strength of peripheral color signal",
          y = "Probability Density") +
-    scale_y_continuous(breaks=seq(0,1,length=5),limits=c(0,1))+
+    scale_y_continuous(breaks=seq(0,0.6,length=6),limits=c(0,0.6))+
     geom_vline(xintercept = estimates[pickup_sub,11], linetype = "dashed", color = "black") + 
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  # 各注意条件で分布を重ねる
     theme_minimal() +
-    theme(legend.position = "top")
+    theme(legend.position = "none")#"top"
   
   print(p)
 }
@@ -392,8 +392,8 @@ sd_117ms <- c(rep(estimates[pickup_sub,9], 7))
 sd_150ms <- c(rep(estimates[pickup_sub,10], 7))  
 sds <- rbind(sd_83ms,sd_117ms,sd_150ms)
 
-attention_levels <- c("0_83ms", "1_117ms", "2_150ms")
-image_types <- c("0_gray", "1_9deg", "2_13deg", "3_17deg", "4_21deg", "5_25deg", "6_color")
+attention_levels <- factor(c("83ms", "117ms", "150ms"), levels = c("83ms", "117ms", "150ms"))
+image_types <- factor(c("gray", "9deg", "13deg", "17deg", "21deg", "25deg", "color"), levels = c("gray", "9deg", "13deg", "17deg", "21deg", "25deg", "color"))
 colors <- c("grey", "mistyrose", "pink", "salmon", "orangered2","red", "brown")
 
 # 関数を呼び出し
@@ -426,13 +426,13 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
   p <- ggplot(data_SDT_plot, aes(x = x, y = y, color = ImageType)) +
     geom_line(size = 1.2) +
     scale_color_manual(values = colors) +
-    labs(x = "Signal strength",
+    labs(x = "Strength of peripheral color signal",
          y = "Probability Density") +
-    scale_y_continuous(breaks=seq(0,1,length=5),limits=c(0,1))+
+    scale_y_continuous(breaks=seq(0,0.6,length=6),limits=c(0,0.6))+
     geom_vline(xintercept = estimates[pickup_sub,11], linetype = "dashed", color = "black") + 
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  # 各注意条件で分布を重ねる
     theme_minimal() +
-    theme(legend.position = "top")
+    theme(legend.position = "none")#"top"
   
   print(p)
 }
@@ -447,8 +447,8 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
  sd_150ms <- c(rep(mean(estimates[,10]), 7))  
  sds <- rbind(sd_83ms,sd_117ms,sd_150ms)
  
-attention_levels <- c("0_83ms", "1_117ms", "2_150ms")
-image_types <- c("0_gray", "1_9deg", "2_13deg", "3_17deg", "4_21deg", "5_25deg", "6_color")
+attention_levels <- factor(c("83ms", "117ms", "150ms"), levels = c("83ms", "117ms", "150ms"))
+image_types <- factor(c("gray", "9deg", "13deg", "17deg", "21deg", "25deg", "color"), levels = c("gray", "9deg", "13deg", "17deg", "21deg", "25deg", "color"))
 colors <- c("grey", "mistyrose", "pink", "salmon", "orangered2","red", "brown")
 
 # 関数を呼び出し
@@ -456,12 +456,12 @@ plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
 
 
 
-#########積み上げグラフでの比較######################################
-# のデータを作成
+#########積み上げグラフでの比較#################################################
+
 data_stackedbar <- data.frame(
   Degree = factor(rep(c("gray","9deg", "13deg", "17deg", "21deg", "25deg", "color"), each = 2), 
                   levels = c("gray", "9deg", "13deg", "17deg", "21deg", "25deg", "color")),
-  Type = rep(c("0_others","1_full-color"), 7),
+  Type = factor(rep(c("others","color"), 7), levels = c("others", "color")),
   Frequency =  as.vector(t(mean_data2)),
   Condition = factor(rep(c("83ms", "117ms", "150ms"), each = 14), 
                      levels = c("83ms", "117ms", "150ms"))
@@ -471,7 +471,7 @@ data_stackedbar <- data.frame(
 predicted_data_stackedbar <- data.frame(
   Degree = factor(c("gray","9deg", "13deg", "17deg", "21deg", "25deg", "color"),
                   levels = c("gray", "9deg", "13deg", "17deg", "21deg", "25deg", "color")),
-  Type = rep(c("1_full-color"), 7),
+  Type = rep(c("color"), 7),
   Predicted = as.vector(t(mean_predicted2)),  # 仮の予測値
   Condition = factor(rep(c("83ms", "117ms", "150ms"), each = 7), 
                      levels = c("83ms", "117ms", "150ms"))
@@ -482,7 +482,7 @@ ggplot(data_stackedbar, aes(x = Degree, y = Frequency, fill = Type)) +
   geom_bar(stat = "identity", position = "stack") +
   labs(x = NULL, y = "Response proportion(%)") +
   theme_minimal() +
-  scale_fill_manual(values = c("1_full-color" = "gray50","0_others" = "gray80" )) +
+  scale_fill_manual(values = c("color" = "gray50","others" = "gray80" )) +
   facet_grid(. ~ Condition) +  
   geom_point(data = predicted_data_stackedbar, aes(x = Degree, y = Predicted), 
              color = "red", size = 3) +  # モデルの予測値を示す点を追加
@@ -497,35 +497,44 @@ ggplot(data_stackedbar, aes(x = Degree, y = Frequency, fill = Type)) +
     strip.text = element_text(size = 18),  # 83ms、117ms、150msの文字サイズを大きくする
     legend.text = element_text(size = 18),  # 凡例の文字サイズを大きくする
     legend.title = element_text(size = 18)  # 凡例タイトルの文字サイズを大きくする
-    )
-
-
+  )
 ################################################################################
 
 data_dprimeC <- data.frame(
-  presentationtime = c("0_83ms","1_117ms", "2_150ms", rep("0_83ms",5),rep("1_117ms",5),rep("2_150ms",5)),
-  imagetype =  c(rep("0_gray",3),"1_9deg","2_13deg","3_17deg","4_21deg","5_25deg","1_9deg","2_13deg","3_17deg","4_21deg","5_25deg","1_9deg","2_13deg","3_17deg","4_21deg","5_25deg"),
+  presentationtime = c("83ms","117ms", "150ms", rep("83ms",5),rep("117ms",5),rep("150ms",5)),
+  imagetype =  c(rep("color",3),"9deg","13deg","17deg","21deg","25deg","9deg","13deg","17deg","21deg","25deg","9deg","13deg","17deg","21deg","25deg"),
   dprime = rowMeans(dprime_mat),
   C = rowMeans(C_mat)
 )
 
-g <- ggplot(data_dprimeC, aes(x = dprime, y = C, group = presentationtime, fill = imagetype))
-g <- g + geom_point(aes(shape = presentationtime, colour = imagetype), size = 4)
-g <- g + labs(x = "dprime", y = "C")
-g <- g + coord_cartesian(xlim = c(0,3.5))
-g <- g + coord_cartesian(ylim = c(-0.6,0.8))
-g <- g + theme_classic()
-g <- g+ theme(
-  axis.title.x = element_text(size = 14 * 2),  # x軸ラベルのサイズを5倍に
-  axis.title.y = element_text(size = 14 * 2),  # y軸ラベルのサイズを5倍に
-  axis.text.x = element_text(size = 7* 2),   # x軸目盛りのサイズを5倍に
-  axis.text.y = element_text(size = 7 * 2),    # y軸目盛りのサイズを5倍に
-  legend.position = "right",
-  strip.text = element_text(size = 18),  # 83ms、117ms、150msの文字サイズを大きくする
-  legend.text = element_text(size = 18),  # 凡例の文字サイズを大きくする
-  legend.title = element_text(size = 18)  # 凡例タイトルの文字サイズを大きくする
-)
+data_dprimeC$presentationtime <- factor(data_dprimeC$presentationtime, levels = c("83ms", "117ms", "150ms"))
+data_dprimeC$imagetype <- factor(data_dprimeC$imagetype, levels = c("9deg", "13deg", "17deg", "21deg", "25deg", "color"))
 
+# プロット作成
+g <- ggplot(data_dprimeC, aes(x = dprime, y = C, group = imagetype, fill = presentationtime)) +
+  geom_point(aes(shape = imagetype, colour = presentationtime), size = 10) +
+  labs(x = "dprime", y = "C") +
+  theme_classic() +
+  theme(
+    axis.title.x = element_text(size = 14 * 2),  # x軸ラベルのサイズを変更
+    axis.title.y = element_text(size = 14 * 2),  # y軸ラベルのサイズを変更
+    axis.text.x = element_text(size = 20),       # x軸目盛りのサイズ
+    axis.text.y = element_text(size = 20),       # y軸目盛りのサイズ
+    legend.position = "right",                   # 凡例の位置
+    strip.text = element_text(size = 18),        # ファセットラベルのサイズ
+    legend.text = element_text(size = 18),       # 凡例テキストのサイズ
+    legend.title = element_text(size = 18)       # 凡例タイトルのサイズ
+  ) +
+  scale_x_continuous(
+    breaks = seq(0, 3, by = 0.5),   # x軸の目盛りを0から3まで0.5刻み
+    limits = c(0, 3)                # x軸の範囲を0から3に固定
+  ) +
+  scale_y_continuous(
+    breaks = seq(0.25, 1.75, by = 0.25),    # y軸の目盛りを0.25から1.75まで0.25刻み
+    limits = c(0.25, 1.75)                  # y軸の範囲を0.25から1.75に固定
+  ) +
+  scale_shape_manual(values = c(1, 2, 3, 4, 5, 6)) +  # imagetypeに対応する形状を手動で指定
+  scale_colour_manual(values = c("83ms" = "red", "117ms" = "blue", "150ms" = "darkgreen"))  # 色を手動で指定
 
+# プロットを表示
 plot(g)
-	
