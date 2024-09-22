@@ -376,7 +376,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     scale_y_continuous(breaks=seq(0,0.6,length=6),limits=c(0,0.6))+
     geom_vline(xintercept = estimates[pickup_sub,11], linetype = "dashed", color = "black") + 
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  # 各注意条件で分布を重ねる
-    theme_minimal() +
+    theme_minimal(base_size = 18) +
     theme(legend.position = "none")#"top"
   
   print(p)
@@ -431,7 +431,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     scale_y_continuous(breaks=seq(0,0.6,length=6),limits=c(0,0.6))+
     geom_vline(xintercept = estimates[pickup_sub,11], linetype = "dashed", color = "black") + 
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  # 各注意条件で分布を重ねる
-    theme_minimal() +
+    theme_minimal(base_size = 18) +
     theme(legend.position = "none")#"top"
   
   print(p)
