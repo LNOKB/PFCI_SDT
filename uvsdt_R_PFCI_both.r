@@ -559,3 +559,8 @@ write.csv(data_ANOVA,"data_ANOVA.csv",row.names = FALSE)
 # 
 # # プロットを表示
 # plot(g)
+
+for (i in 4:47) {
+  ggsave("results_subject/my_plot.png", plot = plot_base, width = 8, height = 6, dpi = 300)
+}
+
