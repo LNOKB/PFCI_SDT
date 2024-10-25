@@ -353,66 +353,66 @@ ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
 
 
 
-# ################################################################################ 参加者ごとのSDTプロットの作成
-# for (r in 4:47) {
-#   pickup_sub <- r-3
-#   
-#   plot_sdt_distributions <- function(means, sds, attention_levels, image_types, colors) {
-#     data_SDT_plot <- data.frame()
-#     
-#     for (i in 1:length(attention_levels)) {
-#       for (j in 1:length(image_types)) {
-#         x <- seq(means[i,j] - 3 * sds[i,j], means[i,j] + 3 * sds[i,j], length.out = 100)
-#         y <- dnorm(x, mean = means[i,j], sd = sds[i,j])
-#         
-#         
-#         # データフレームに追加
-#         data_SDT_plot <- rbind(data_SDT_plot, data.frame(
-#           x = x,
-#           y = y,
-#           Attention = attention_levels[i],
-#           ImageType = image_types[j],
-#           color = colors[j]
-#         ))
-#       }
-#     }
-#     
-#     p <- ggplot(data_SDT_plot, aes(x = x, y = y, color = ImageType)) +
-#       geom_line(size = 1.2) +
-#       scale_color_manual(values = colors) +
-#       labs(x = "Strength of peripheral color signal",
-#            y = "Probability Density") +
-#       scale_x_continuous(breaks=seq(-2,8),limits=c(-2,8))+
-#       scale_y_continuous(breaks=seq(0,1,length=5),limits=c(0,1))+
-#       geom_vline(xintercept = estimates[pickup_sub,11], linetype = "dashed", color = "black") + 
-#       facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  # 各注意条件で分布を重ねる
-#       theme_minimal(base_size = 18) +
-#       theme(legend.position = "none")#"top"
-#     
-#     #print(p)
-#     i_string <- as.character(r)
-#     plotname <- paste0("plot_subjects/signal_distribution/", i_string, ".png") 
-#     ggsave(plotname, plot = p, width = 8, height = 6, dpi = 300)
-#   }
-#   
-#   # 平均値と標準偏差
-#   means_83ms <- c(mu83ms_gray, estimates[pickup_sub,1], estimates[pickup_sub,2], estimates[pickup_sub,3], estimates[pickup_sub,4], estimates[pickup_sub,5], estimates[pickup_sub,6])  
-#   means_117ms <- means_83ms * estimates[pickup_sub,7]
-#   means_150ms <- means_83ms * estimates[pickup_sub,8]
-#   means <- rbind(means_83ms,means_117ms,means_150ms)
-#   sd_83ms <- c(rep(sigma83ms, 7))  
-#   sd_117ms <- c(rep(estimates[pickup_sub,9], 7))  
-#   sd_150ms <- c(rep(estimates[pickup_sub,10], 7))  
-#   sds <- rbind(sd_83ms,sd_117ms,sd_150ms)
-#   
-#   attention_levels <- factor(c("83 ms", "117 ms", "150 ms"), levels = c("83 ms", "117 ms", "150 ms"))
-#   image_types <- factor(c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"))
-#   colors <- c("grey", "mistyrose", "pink", "salmon", "orangered2","red", "brown")
-#   
-#   # 関数を呼び出し
-#   plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
-#   
-# }
+################################################################################ 参加者ごとのSDTプロットの作成
+for (r in 4:47) {
+  pickup_sub <- r-3
+
+  plot_sdt_distributions <- function(means, sds, attention_levels, image_types, colors) {
+    data_SDT_plot <- data.frame()
+
+    for (i in 1:length(attention_levels)) {
+      for (j in 1:length(image_types)) {
+        x <- seq(means[i,j] - 3 * sds[i,j], means[i,j] + 3 * sds[i,j], length.out = 100)
+        y <- dnorm(x, mean = means[i,j], sd = sds[i,j])
+
+
+        # データフレームに追加
+        data_SDT_plot <- rbind(data_SDT_plot, data.frame(
+          x = x,
+          y = y,
+          Attention = attention_levels[i],
+          ImageType = image_types[j],
+          color = colors[j]
+        ))
+      }
+    }
+
+    p <- ggplot(data_SDT_plot, aes(x = x, y = y, color = ImageType)) +
+      geom_line(size = 1.2) +
+      scale_color_manual(values = colors) +
+      labs(x = "Strength of peripheral color signal",
+           y = "Probability Density") +
+      scale_x_continuous(breaks=seq(-2,8),limits=c(-2,8))+
+      scale_y_continuous(breaks=seq(0,1,length=5),limits=c(0,1))+
+      geom_vline(xintercept = estimates[pickup_sub,11], linetype = "dashed", color = "black") +
+      facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  # 各注意条件で分布を重ねる
+      theme_minimal(base_size = 18) +
+      theme(legend.position = "none")#"top"
+
+    #print(p)
+    i_string <- as.character(r)
+    plotname <- paste0("plot_subjects/signal_distribution/", i_string, ".png")
+    ggsave(plotname, plot = p, width = 8, height = 6, dpi = 300)
+  }
+
+  # 平均値と標準偏差
+  means_83ms <- c(mu83ms_gray, estimates[pickup_sub,1], estimates[pickup_sub,2], estimates[pickup_sub,3], estimates[pickup_sub,4], estimates[pickup_sub,5], estimates[pickup_sub,6])
+  means_117ms <- means_83ms * estimates[pickup_sub,7]
+  means_150ms <- means_83ms * estimates[pickup_sub,8]
+  means <- rbind(means_83ms,means_117ms,means_150ms)
+  sd_83ms <- c(rep(sigma83ms, 7))
+  sd_117ms <- c(rep(estimates[pickup_sub,9], 7))
+  sd_150ms <- c(rep(estimates[pickup_sub,10], 7))
+  sds <- rbind(sd_83ms,sd_117ms,sd_150ms)
+
+  attention_levels <- factor(c("83 ms", "117 ms", "150 ms"), levels = c("83 ms", "117 ms", "150 ms"))
+  image_types <- factor(c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"))
+  colors <- c("grey", "mistyrose", "pink", "salmon", "orangered2","red", "brown")
+
+  # 関数を呼び出し
+  plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
+
+}
 
 ################################################################################ 参加者平均SDTの図示
 
@@ -570,9 +570,9 @@ write.csv(data_ANOVA,"data_ANOVA.csv",row.names = FALSE)
 # #########################################################################################参加者ごとのResponseRateプロット作成###
 
 
-for (i in 4:47) {
+for (s in 4:47) {
   
-  nowsub <- i-3
+  nowsub <- s-3
   mean_data_sub <- c(data_rate_array[1,2,nowsub],data_rate_array[4:8,2,nowsub],data_rate_array[19,2,nowsub],data_rate_array[2,2,nowsub],data_rate_array[9:13,2,nowsub],data_rate_array[20,2,nowsub],data_rate_array[3,2,nowsub],data_rate_array[14:18,2,nowsub],data_rate_array[21,2,nowsub])*100
   mean_pred_sub <- c(predicted_array[1,2,nowsub],predicted_array[4:8,2,nowsub],predicted_array[19,2,nowsub],predicted_array[2,2,nowsub],predicted_array[9:13,2,nowsub],predicted_array[20,2,nowsub],predicted_array[3,2,nowsub],predicted_array[14:18,2,nowsub],predicted_array[21,2,nowsub])*100
   
