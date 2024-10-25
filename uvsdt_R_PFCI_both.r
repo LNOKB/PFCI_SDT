@@ -39,14 +39,14 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   # model fit
   fit <- suppressWarnings(optim(uvsdt_logL, 
                                 par = guess, 
-                                lower =      c(0, 0, 0, 0, 0, 0, 0, 0, 0.4, 0.4, 0),
+                                lower =      c(0.1, 0.1, 0.1, 0.1, 0.1, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5),
                                 upper =      c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, 2.0, 2.0, 5.0), 
                                 gr = NULL, method = "BFGS", 
                                 control = list("maxit" = 10000, 
                                                "parscale" = c(1,   1,    1,   1,    1,   1,  0.001,  0.001,  0.001,  0.001,  1))))
-  #lower =      c(0.1, 0.1, 0.1, 0.1, 0.1, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5),
-  #upper =      c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, 2.0, 2.0, 5.0), 
-  
+
+  #lower =      c(0, 0, 0, 0, 0, 0, 0, 0, 0.4, 0.4, 0),
+
   # outputs
   mu83ms_9deg  <- fit$par[1]
   mu83ms_13deg <- fit$par[2] 
@@ -567,57 +567,60 @@ write.csv(data_ANOVA,"data_ANOVA.csv",row.names = FALSE)
 # # プロットを表示
 # plot(g)
 
-##########################################################################################参加者ごとのResponseRateプロット作成###
-# 
-# for (i in 4:47) {
-#   data_bar <- data.frame(
-#     ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3), 
-#                        levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color")),
-#     Proportion =  as.vector(mean_data2[i-3]),
-#     SE =  as.vector(se_data2[i-3]),
-#     Condition = factor(c(rep("83 ms", 7),rep("117 ms", 7),rep("150 ms", 7)), 
-#                        levels = c("83 ms", "117 ms", "150 ms"))
-#   )
-#   
-#   predicted_data_bar <- data.frame(
-#     ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3),
-#                        levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color")),
-#     Predicted = as.vector(mean_predicted2[i-3]),  # 仮の予測値
-#     SE =  as.vector(se_predicted2[i-3]),
-#     Condition = factor(c(rep("83 ms", 7),rep("117 ms", 7),rep("150 ms", 7)), 
-#                        levels = c("83 ms", "117 ms", "150 ms"))
-#   )
-#   
-#   plot_base <- ggplot(data_bar, aes(x = ImageType, y = Proportion)) +
-#     geom_bar(stat = "identity", position = "stack") +
-#     labs(x = NULL, y = "Color Response proportion (%)") +
-#     theme_minimal() +
-#     facet_grid(. ~ Condition) +  
-#     geom_point(data = predicted_data_bar, aes(x = ImageType, y = Predicted), 
-#                color = "red", size = 3) +  # モデルの予測値を示す点を追加 
-#     geom_errorbar(data = data_bar, aes(ymin = Proportion - SE, ymax = Proportion + SE), 
-#                   width = 0.2) + #, position = position_dodge(0.9)
-#     theme_classic()+
-#     theme(legend.position = "right")+  # テーマの設定
-#     theme(
-#       plot.title = element_text(size = 20 * 2),    # タイトルのサイズを5倍に
-#       axis.title.x = element_text(size = 14 * 2),  # x軸ラベルのサイズを5倍に
-#       axis.title.y = element_text(size = 14 * 2),  # y軸ラベルのサイズを5倍に
-#       axis.text.x = element_text(size = 8 * 2),   # x軸目盛りのサイズを5倍に
-#       axis.text.y = element_text(size = 11 * 2),    # y軸目盛りのサイズを5倍に
-#       legend.position = "right",
-#       strip.text = element_text(size = 18),  # 83ms、117ms、150msの文字サイズを大きくする
-#       legend.text = element_text(size = 18),  # 凡例の文字サイズを大きくする
-#       legend.title = element_text(size = 18)  # 凡例タイトルの文字サイズを大きくする
-#     )+
-#     scale_y_continuous(
-#       breaks = seq(0, 100, by = 20),    
-#       limits = c(0, 100)                  
-#     ) 
-#   
-#   i_string <- as.character(i)
-#   plotname <- paste0("plot_subjects/response_rate/", i_string, ".png") 
-#   ggsave(plotname, plot = plot_base, width = 8, height = 6, dpi = 300)
-#   
-# }
-# 
+# #########################################################################################参加者ごとのResponseRateプロット作成###
+
+
+for (i in 4:47) {
+  
+  nowsub <- i-3
+  mean_data_sub <- c(data_rate_array[1,2,nowsub],data_rate_array[4:8,2,nowsub],data_rate_array[19,2,nowsub],data_rate_array[2,2,nowsub],data_rate_array[9:13,2,nowsub],data_rate_array[20,2,nowsub],data_rate_array[3,2,nowsub],data_rate_array[14:18,2,nowsub],data_rate_array[21,2,nowsub])*100
+  mean_pred_sub <- c(predicted_array[1,2,nowsub],predicted_array[4:8,2,nowsub],predicted_array[19,2,nowsub],predicted_array[2,2,nowsub],predicted_array[9:13,2,nowsub],predicted_array[20,2,nowsub],predicted_array[3,2,nowsub],predicted_array[14:18,2,nowsub],predicted_array[21,2,nowsub])*100
+  
+  
+  data_bar_sub <- data.frame(
+    ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3),
+                       levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color")),
+    Proportion =  as.vector(mean_data_sub),
+    Condition = factor(c(rep("83 ms", 7),rep("117 ms", 7),rep("150 ms", 7)),
+                       levels = c("83 ms", "117 ms", "150 ms"))
+  )
+
+  predicted_data_bar_sub <- data.frame(
+    ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3),
+                       levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color")),
+    Predicted = as.vector(mean_pred_sub),  # 仮の予測値
+    Condition = factor(c(rep("83 ms", 7),rep("117 ms", 7),rep("150 ms", 7)),
+                       levels = c("83 ms", "117 ms", "150 ms"))
+  )
+
+  plot_base <- ggplot(data_bar_sub, aes(x = ImageType, y = Proportion)) +
+    geom_bar(stat = "identity", position = "stack") +
+    labs(x = NULL, y = "Color Response proportion (%)") +
+    theme_minimal() +
+    facet_grid(. ~ Condition) +
+    geom_point(data = predicted_data_bar_sub, aes(x = ImageType, y = Predicted),
+               color = "red", size = 3) +  # モデルの予測値を示す点を追加
+    theme_classic()+
+    theme(legend.position = "right")+  # テーマの設定
+    theme(
+      plot.title = element_text(size = 20 * 2),    # タイトルのサイズを5倍に
+      axis.title.x = element_text(size = 14 * 2),  # x軸ラベルのサイズを5倍に
+      axis.title.y = element_text(size = 14 * 2),  # y軸ラベルのサイズを5倍に
+      axis.text.x = element_text(size = 8 * 2),   # x軸目盛りのサイズを5倍に
+      axis.text.y = element_text(size = 11 * 2),    # y軸目盛りのサイズを5倍に
+      legend.position = "right",
+      strip.text = element_text(size = 18),  # 83ms、117ms、150msの文字サイズを大きくする
+      legend.text = element_text(size = 18),  # 凡例の文字サイズを大きくする
+      legend.title = element_text(size = 18)  # 凡例タイトルの文字サイズを大きくする
+    )+
+    scale_y_continuous(
+      breaks = seq(0, 100, by = 20),
+      limits = c(0, 100)
+    )
+
+  i_string <- as.character(i)
+  plotname <- paste0("plot_subjects/response_rate/", i_string, ".png")
+  ggsave(plotname, plot = plot_base, width = 15, height = 6, dpi = 300)
+
+}
+
