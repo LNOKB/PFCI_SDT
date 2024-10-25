@@ -378,7 +378,7 @@ for (r in 4:47) {
     }
     
     p <- ggplot(data_SDT_plot, aes(x = x, y = y, color = ImageType)) +
-      geom_line(size = 1.2) +
+      geom_line(linewidth = 1.2) +
       scale_color_manual(values = colors) +
       labs(x = "Strength of peripheral color signal",
            y = "Probability Density") +
