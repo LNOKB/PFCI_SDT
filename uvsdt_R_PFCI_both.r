@@ -1,4 +1,8 @@
 library(tidyverse)
+library(ggplot2)
+#library(ggsignif)
+library(plotly)
+library(viridis)
 
 dat <- read.table("subdata.csv", header=T,sep=",") 
 
@@ -326,7 +330,14 @@ for (i in 1:4){
   print(t_test_above1)
 }
 
-library(ggplot2)
+text_data <- data.frame(
+  x = c(1, 3, 4),  # 各テキストのx座標
+  y = c(1.5, 0.5, 0.5),  # 各テキストのy座標
+  label = c("***", "*", "***")  # 表示するテキスト
+)
+
+
+
 data_parameter_plot <- data.frame(
   Parameters = rep(c("λ 117ms", "λ 150ms", "σ 117ms", "σ 150ms"), each = 44),
   Value = c(estimates[,7], estimates[,8], estimates[,9], estimates[,10])
@@ -334,11 +345,11 @@ data_parameter_plot <- data.frame(
 #data_parameter_plot$Value <- log(data_parameter_plot$Value)
 
 # グラフの作成
-ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
+parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
   geom_violin(fill = "skyblue", color = "black") +  # ヴァイオリンプロットの描画
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  # y = 1 の位置に横線を追加
   labs(x = "Parameters",
-       y = "Value") + #Log-scaled 
+       y = "Value") + 
   coord_cartesian(ylim = c(0, 2)) +  
   stat_summary(fun = mean, geom = "point", 
                shape =16, size = 2, color = "black")+
@@ -351,68 +362,76 @@ ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
     axis.text.y = element_text(size = 11 * 2)    # y軸目盛りのサイズを5倍に
   )
 
+ggplotly(parameters_graph) %>% htmlwidgets::saveWidget("parameters.html")
+browseURL("parameters.html")
+
+# parameters_graph_plotly <- ggplotly(parameters_graph)
+# #plot(
+# parameters_graph_plotly
+
+#  geom_text(data = text_data, aes(x = x, y = y, label = label), color = "black", size = 6)
 
 
-################################################################################ 参加者ごとのSDTプロットの作成
-for (r in 4:47) {
-  pickup_sub <- r-3
-  
-  plot_sdt_distributions <- function(means, sds, attention_levels, image_types, colors) {
-    data_SDT_plot <- data.frame()
-    
-    for (i in 1:length(attention_levels)) {
-      for (j in 1:length(image_types)) {
-        x <- seq(means[i,j] - 3 * sds[i,j], means[i,j] + 3 * sds[i,j], length.out = 100)
-        y <- dnorm(x, mean = means[i,j], sd = sds[i,j])
-        
-        
-        # データフレームに追加
-        data_SDT_plot <- rbind(data_SDT_plot, data.frame(
-          x = x,
-          y = y,
-          Attention = attention_levels[i],
-          ImageType = image_types[j],
-          color = colors[j]
-        ))
-      }
-    }
-    
-    p <- ggplot(data_SDT_plot, aes(x = x, y = y, color = ImageType)) +
-      geom_line(linewidth = 1.2) +
-      scale_color_manual(values = colors) +
-      labs(x = "Strength of peripheral color signal",
-           y = "Probability Density") +
-      scale_x_continuous(breaks=seq(-2,8),limits=c(-2,8))+
-      scale_y_continuous(breaks=seq(0,1,length=5),limits=c(0,1))+
-      geom_vline(xintercept = estimates[pickup_sub,11], linetype = "dashed", color = "black") +
-      facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  # 各注意条件で分布を重ねる
-      theme_minimal(base_size = 18) +
-      theme(legend.position = "none")#"top"
-    
-    #print(p)
-    i_string <- as.character(r)
-    plotname <- paste0("plot_subjects/signal_distribution/", i_string, ".png")
-    ggsave(plotname, plot = p, width = 8, height = 6, dpi = 300)
-  }
-  
-  # 平均値と標準偏差
-  means_83ms <- c(mu83ms_gray, estimates[pickup_sub,1], estimates[pickup_sub,2], estimates[pickup_sub,3], estimates[pickup_sub,4], estimates[pickup_sub,5], estimates[pickup_sub,6])
-  means_117ms <- means_83ms * estimates[pickup_sub,7]
-  means_150ms <- means_83ms * estimates[pickup_sub,8]
-  means <- rbind(means_83ms,means_117ms,means_150ms)
-  sd_83ms <- c(rep(sigma83ms, 7))
-  sd_117ms <- c(rep(estimates[pickup_sub,9], 7))
-  sd_150ms <- c(rep(estimates[pickup_sub,10], 7))
-  sds <- rbind(sd_83ms,sd_117ms,sd_150ms)
-  
-  attention_levels <- factor(c("83 ms", "117 ms", "150 ms"), levels = c("83 ms", "117 ms", "150 ms"))
-  image_types <- factor(c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"))
-  colors <- c("grey", "mistyrose", "pink", "salmon", "orangered2","red", "brown")
-  
-  # 関数を呼び出し
-  plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
-  
-}
+# ################################################################################ 参加者ごとのSDTプロットの作成
+# for (r in 4:47) {
+#   pickup_sub <- r-3
+#   
+#   plot_sdt_distributions <- function(means, sds, attention_levels, image_types, colors) {
+#     data_SDT_plot <- data.frame()
+#     
+#     for (i in 1:length(attention_levels)) {
+#       for (j in 1:length(image_types)) {
+#         x <- seq(means[i,j] - 3 * sds[i,j], means[i,j] + 3 * sds[i,j], length.out = 100)
+#         y <- dnorm(x, mean = means[i,j], sd = sds[i,j])
+#         
+#         
+#         # データフレームに追加
+#         data_SDT_plot <- rbind(data_SDT_plot, data.frame(
+#           x = x,
+#           y = y,
+#           Attention = attention_levels[i],
+#           ImageType = image_types[j],
+#           color = colors[j]
+#         ))
+#       }
+#     }
+#     
+#     p <- ggplot(data_SDT_plot, aes(x = x, y = y, color = ImageType)) +
+#       geom_line(linewidth = 1.2) +
+#       scale_color_manual(values = colors) +
+#       labs(x = "Strength of peripheral color signal",
+#            y = "Probability Density") +
+#       scale_x_continuous(breaks=seq(-2,8),limits=c(-2,8))+
+#       scale_y_continuous(breaks=seq(0,1,length=5),limits=c(0,1))+
+#       geom_vline(xintercept = estimates[pickup_sub,11], linetype = "dashed", color = "black") +
+#       facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  # 各注意条件で分布を重ねる
+#       theme_minimal(base_size = 18) +
+#       theme(legend.position = "none")#"top"
+#     
+#     #print(p)
+#     i_string <- as.character(r)
+#     plotname <- paste0("plot_subjects/signal_distribution/", i_string, ".png")
+#     ggsave(plotname, plot = p, width = 8, height = 6, dpi = 300)
+#   }
+#   
+#   # 平均値と標準偏差
+#   means_83ms <- c(mu83ms_gray, estimates[pickup_sub,1], estimates[pickup_sub,2], estimates[pickup_sub,3], estimates[pickup_sub,4], estimates[pickup_sub,5], estimates[pickup_sub,6])
+#   means_117ms <- means_83ms * estimates[pickup_sub,7]
+#   means_150ms <- means_83ms * estimates[pickup_sub,8]
+#   means <- rbind(means_83ms,means_117ms,means_150ms)
+#   sd_83ms <- c(rep(sigma83ms, 7))
+#   sd_117ms <- c(rep(estimates[pickup_sub,9], 7))
+#   sd_150ms <- c(rep(estimates[pickup_sub,10], 7))
+#   sds <- rbind(sd_83ms,sd_117ms,sd_150ms)
+#   
+#   attention_levels <- factor(c("83 ms", "117 ms", "150 ms"), levels = c("83 ms", "117 ms", "150 ms"))
+#   image_types <- factor(c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"))
+#   colors <- c("grey", "mistyrose", "pink", "salmon", "orangered2","red", "brown")
+#   
+#   # 関数を呼び出し
+#   plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
+#   
+# }
 
 ################################################################################ 参加者平均SDTの図示
 
@@ -440,12 +459,22 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     geom_line(size = 1.2) +
     scale_color_manual(values = colors) +
     labs(x = "Strength of peripheral color signal",
-         y = "Probability Density") +
-    scale_y_continuous(breaks=seq(0,0.6,length=6),limits=c(0,0.6))+
+         y = "Probability density") +
+    scale_y_continuous(breaks=seq(0,0.6,length=7),limits=c(0,0.6))+
     geom_vline(xintercept = mean(estimates[,11]), linetype = "dashed", color = "black") + 
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  # 各注意条件で分布を重ねる
     theme_minimal(base_size = 18) +
-    theme(legend.position = "none")#"top"
+    theme(
+      panel.grid.major = element_blank(),   # 大きなグリッド線を消す
+      panel.grid.minor = element_blank(),   # 小さなグリッド線を消す
+      axis.line = element_line(size = 0.5, color = "black"),  # 軸線を表示
+      axis.ticks = element_line(color = "black"),  # メモリを表示
+      axis.ticks.length = unit(0.3, "cm"),  # メモリの長さを調整
+      legend.position = "none"
+    )
+  
+  ggplotly(p) %>% htmlwidgets::saveWidget("p.html")
+  browseURL("p.html")
   
   print(p)
 }
@@ -462,14 +491,14 @@ sds <- rbind(sd_83ms,sd_117ms,sd_150ms)
 
 attention_levels <- factor(c("83 ms", "117 ms", "150 ms"), levels = c("83 ms", "117 ms", "150 ms"))
 image_types <- factor(c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"))
-colors <- c("grey", "mistyrose", "pink", "salmon", "orangered2","red", "brown")
+colors <- viridis(7, option = "plasma") 
 
 # 関数を呼び出し
 plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
 
 
 
-#########積み上げグラフでの比較#################################################
+#########積み上げグラフ#################################################
 
 data_bar <- data.frame(
   ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3), 
@@ -484,24 +513,24 @@ predicted_data_bar <- data.frame(
   ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3),
                      levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color")),
   Predicted = as.vector(t(mean_predicted2)),  # 仮の予測値
-  SE =  as.vector(t(se_predicted2)),
   Condition = factor(c(rep("83 ms", 7),rep("117 ms", 7),rep("150 ms", 7)), 
                      levels = c("83 ms", "117 ms", "150 ms"))
 )
 
+
 # グラフの作成
-ggplot(data_bar, aes(x = ImageType, y = Proportion)) +
+bar_graph<-ggplot(data_bar, aes(x = ImageType, y = Proportion)) +
   geom_bar(stat = "identity", position = "stack") +
   labs(x = NULL, y = "Color Response proportion (%)") +
-  theme_minimal() +
   facet_grid(. ~ Condition) +  
   geom_point(data = predicted_data_bar, aes(x = ImageType, y = Predicted), 
              color = "red", size = 3) +  # モデルの予測値を示す点を追加 
   geom_errorbar(data = data_bar, aes(ymin = Proportion - SE, ymax = Proportion + SE), 
                 width = 0.2) + #, position = position_dodge(0.9)
-  theme_classic()+
   theme(legend.position = "right")+  # テーマの設定
   theme(
+    panel.grid.major = element_blank(),   # 大きなグリッド線を消す
+    panel.grid.minor = element_blank(),   # 小さなグリッド線を消す
     plot.title = element_text(size = 20 * 2),    # タイトルのサイズを5倍に
     axis.title.x = element_text(size = 14 * 2),  # x軸ラベルのサイズを5倍に
     axis.title.y = element_text(size = 14 * 2),  # y軸ラベルのサイズを5倍に
@@ -517,6 +546,10 @@ ggplot(data_bar, aes(x = ImageType, y = Proportion)) +
     limits = c(0, 100)                  
   ) 
 
+
+# ブラウザで表示するためにファイルとして保存し、自動で開く
+ggplotly(bar_graph) %>% htmlwidgets::saveWidget("plot.html")
+browseURL("plot.html")
 
 #############################################################################ANOVA
 # 83-g,83-9,83-13,83-17,83-21,83-25,83-c, 117-g,117-9,117-13,117-17,117-21,117-25,117-c, 150-g,150-9,150-13,150-17,150-21,150-25,150-c
@@ -567,60 +600,203 @@ write.csv(data_ANOVA,"data_ANOVA.csv",row.names = FALSE)
 # # プロットを表示
 # plot(g)
 
-# #########################################################################################参加者ごとのResponseRateプロット作成###
+# # #########################################################################################参加者ごとのResponseRateプロット作成###
+# 
+# 
+# for (s in 4:47) {
+#   
+#   nowsub <- s-3
+#   mean_data_sub <- c(data_rate_array[1,2,nowsub],data_rate_array[4:8,2,nowsub],data_rate_array[19,2,nowsub],data_rate_array[2,2,nowsub],data_rate_array[9:13,2,nowsub],data_rate_array[20,2,nowsub],data_rate_array[3,2,nowsub],data_rate_array[14:18,2,nowsub],data_rate_array[21,2,nowsub])*100
+#   mean_pred_sub <- c(predicted_array[1,2,nowsub],predicted_array[4:8,2,nowsub],predicted_array[19,2,nowsub],predicted_array[2,2,nowsub],predicted_array[9:13,2,nowsub],predicted_array[20,2,nowsub],predicted_array[3,2,nowsub],predicted_array[14:18,2,nowsub],predicted_array[21,2,nowsub])*100
+#   
+#   
+#   data_bar_sub <- data.frame(
+#     ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3),
+#                        levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color")),
+#     Proportion =  as.vector(mean_data_sub),
+#     Condition = factor(c(rep("83 ms", 7),rep("117 ms", 7),rep("150 ms", 7)),
+#                        levels = c("83 ms", "117 ms", "150 ms"))
+#   )
+#   
+#   predicted_data_bar_sub <- data.frame(
+#     ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3),
+#                        levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color")),
+#     Predicted = as.vector(mean_pred_sub),  # 仮の予測値
+#     Condition = factor(c(rep("83 ms", 7),rep("117 ms", 7),rep("150 ms", 7)),
+#                        levels = c("83 ms", "117 ms", "150 ms"))
+#   )
+#   
+#   plot_base <- ggplot(data_bar_sub, aes(x = ImageType, y = Proportion)) +
+#     geom_bar(stat = "identity", position = "stack") +
+#     labs(x = NULL, y = "Color Response proportion (%)") +
+#     theme_minimal() +
+#     facet_grid(. ~ Condition) +
+#     geom_point(data = predicted_data_bar_sub, aes(x = ImageType, y = Predicted),
+#                color = "red", size = 3) +  # モデルの予測値を示す点を追加
+#     theme_classic()+
+#     theme(legend.position = "right")+  # テーマの設定
+#     theme(
+#       plot.title = element_text(size = 20 * 2),    # タイトルのサイズを5倍に
+#       axis.title.x = element_text(size = 14 * 2),  # x軸ラベルのサイズを5倍に
+#       axis.title.y = element_text(size = 14 * 2),  # y軸ラベルのサイズを5倍に
+#       axis.text.x = element_text(size = 8 * 2),   # x軸目盛りのサイズを5倍に
+#       axis.text.y = element_text(size = 11 * 2),    # y軸目盛りのサイズを5倍に
+#       legend.position = "right",
+#       strip.text = element_text(size = 18),  # 83ms、117ms、150msの文字サイズを大きくする
+#       legend.text = element_text(size = 18),  # 凡例の文字サイズを大きくする
+#       legend.title = element_text(size = 18)  # 凡例タイトルの文字サイズを大きくする
+#     )+
+#     scale_y_continuous(
+#       breaks = seq(0, 100, by = 20),
+#       limits = c(0, 100)
+#     )
+#   
+#   i_string <- as.character(i)
+#   plotname <- paste0("plot_subjects/response_rate/", i_string, ".png")
+#   ggsave(plotname, plot = plot_base, width = 15, height = 6, dpi = 300)
+#   
+# }
+# 
 
+################################################################################ 概念SDTの図示
 
-for (s in 4:47) {
+plot_sdt_concept <- function(means, sds, attention_levels, image_types, colors) {
+  data_SDT_plot <- data.frame()
   
-  nowsub <- s-3
-  mean_data_sub <- c(data_rate_array[1,2,nowsub],data_rate_array[4:8,2,nowsub],data_rate_array[19,2,nowsub],data_rate_array[2,2,nowsub],data_rate_array[9:13,2,nowsub],data_rate_array[20,2,nowsub],data_rate_array[3,2,nowsub],data_rate_array[14:18,2,nowsub],data_rate_array[21,2,nowsub])*100
-  mean_pred_sub <- c(predicted_array[1,2,nowsub],predicted_array[4:8,2,nowsub],predicted_array[19,2,nowsub],predicted_array[2,2,nowsub],predicted_array[9:13,2,nowsub],predicted_array[20,2,nowsub],predicted_array[3,2,nowsub],predicted_array[14:18,2,nowsub],predicted_array[21,2,nowsub])*100
+  for (i in 1:length(attention_levels)) {
+    for (j in 1:length(image_types)) {
+      x <- seq(means[i,j] - 3 * sds[i,j], means[i,j] + 3 * sds[i,j], length.out = 100)
+      y <- dnorm(x, mean = means[i,j], sd = sds[i,j]) #最大
+      
+      
+      # データフレームに追加
+      data_SDT_plot <- rbind(data_SDT_plot, data.frame(
+        x = x,
+        y = y,
+        Attention = attention_levels[i],
+        ImageType = image_types[j],
+        color = colors[j]
+      ))
+    }
+  }
   
-  
-  data_bar_sub <- data.frame(
-    ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3),
-                       levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color")),
-    Proportion =  as.vector(mean_data_sub),
-    Condition = factor(c(rep("83 ms", 7),rep("117 ms", 7),rep("150 ms", 7)),
-                       levels = c("83 ms", "117 ms", "150 ms"))
-  )
-  
-  predicted_data_bar_sub <- data.frame(
-    ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3),
-                       levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color")),
-    Predicted = as.vector(mean_pred_sub),  # 仮の予測値
-    Condition = factor(c(rep("83 ms", 7),rep("117 ms", 7),rep("150 ms", 7)),
-                       levels = c("83 ms", "117 ms", "150 ms"))
-  )
-  
-  plot_base <- ggplot(data_bar_sub, aes(x = ImageType, y = Proportion)) +
-    geom_bar(stat = "identity", position = "stack") +
-    labs(x = NULL, y = "Color Response proportion (%)") +
-    theme_minimal() +
-    facet_grid(. ~ Condition) +
-    geom_point(data = predicted_data_bar_sub, aes(x = ImageType, y = Predicted),
-               color = "red", size = 3) +  # モデルの予測値を示す点を追加
-    theme_classic()+
-    theme(legend.position = "right")+  # テーマの設定
-    theme(
-      plot.title = element_text(size = 20 * 2),    # タイトルのサイズを5倍に
-      axis.title.x = element_text(size = 14 * 2),  # x軸ラベルのサイズを5倍に
-      axis.title.y = element_text(size = 14 * 2),  # y軸ラベルのサイズを5倍に
-      axis.text.x = element_text(size = 8 * 2),   # x軸目盛りのサイズを5倍に
-      axis.text.y = element_text(size = 11 * 2),    # y軸目盛りのサイズを5倍に
-      legend.position = "right",
-      strip.text = element_text(size = 18),  # 83ms、117ms、150msの文字サイズを大きくする
-      legend.text = element_text(size = 18),  # 凡例の文字サイズを大きくする
-      legend.title = element_text(size = 18)  # 凡例タイトルの文字サイズを大きくする
-    )+
-    scale_y_continuous(
-      breaks = seq(0, 100, by = 20),
-      limits = c(0, 100)
+  arrow_data <- data.frame(
+    x = c(1, 1),
+    y = c(2, 2),
+    Group = c("117 ms", "117 ms")
     )
   
-  i_string <- as.character(i)
-  plotname <- paste0("plot_subjects/response_rate/", i_string, ".png")
-  ggsave(plotname, plot = plot_base, width = 15, height = 6, dpi = 300)
+  
+  concept_plot <- ggplot(data_SDT_plot, aes(x = x, y = y, color = ImageType)) +
+    geom_line(size = 1.2) +
+    scale_color_manual(values = colors) +
+    labs(x = "Strength of peripheral color signal",
+         y = "Probability density") +
+    scale_y_continuous(breaks=seq(0,0.8,length=9),limits=c(0,0.8))+
+    scale_x_continuous(breaks = c(0)) +  # x軸に0のみ表示
+    geom_vline(xintercept = mean(estimates[,11]), linetype = "dashed", color = "black") + 
+    facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  # 各注意条件で分布を重ねる
+    theme_minimal(base_size = 18) +
+    theme(
+      panel.grid.major = element_blank(),   # 大きなグリッド線を消す
+      panel.grid.minor = element_blank(),   # 小さなグリッド線を消す
+      axis.text.x = element_text(size = 20, color = "black"),   # x軸目盛りのサイズ
+      axis.text.y = element_blank(),  # Y軸の目盛りラベルを非表示に
+      axis.ticks.y = element_blank(),  # Y軸の目盛り線を非表示に
+      legend.position = c(0.1, 5),
+      axis.title.y = element_text(margin = margin(r = 0.1))  # Y軸ラベルの右マージンを設定
+    )+ 
+    geom_text(data = subset(data_SDT_plot, Attention == "83 ms"),
+                 aes(x = 0, y = 0.445, label = "μ83ms_gray"),
+                 size = 6, color = colors[1]) + 
+    geom_text(data = subset(data_SDT_plot, Attention == "83 ms"),
+              aes(x = 0, y = 0.4, label = "|"),
+              size = 6, color = colors[1])+ 
+    geom_text(data = subset(data_SDT_plot, Attention == "83 ms"),
+              aes(x = 1.5, y = 0.45, label = "μ83ms_17deg"),
+              size = 6, color = colors[4]) + 
+    geom_text(data = subset(data_SDT_plot, Attention == "83 ms"),
+              aes(x = 1.5, y = 0.4, label = "|"),
+              size = 6, color = colors[4])+ 
+    geom_text(data = subset(data_SDT_plot, Attention == "83 ms"),
+              aes(x = 3, y = 0.45, label = "μ83ms_color"),
+              size = 6, color = colors[7]) + 
+    geom_text(data = subset(data_SDT_plot, Attention == "83 ms"),
+              aes(x =3, y = 0.4, label = "|"),
+              size = 6, color = colors[7])+ 
+    geom_text(data = subset(data_SDT_plot, Attention == "83 ms"),
+              aes(x =3.1, y = 0.7, label = "θ(criterion)"),
+              size = 6, color = "black")+
+    geom_segment(data = subset(data_SDT_plot, Attention == "117 ms"),
+                 aes(x = 0, xend = 3.8, y = 0.52, yend = 0.52), 
+                 arrow = arrow(), color = "black")+
+    geom_segment(data = subset(data_SDT_plot, Attention == "117 ms"),
+                 aes(x = 3.6, xend = 3.8, y = 0.54, yend = 0.52), 
+                 arrow = arrow(), color = "black")+
+    geom_segment(data = subset(data_SDT_plot, Attention == "117 ms"),
+                 aes(x = 3.6, xend = 3.8, y = 0.5, yend = 0.52), 
+                 arrow = arrow(), color = "black")+
+    geom_text(data = subset(data_SDT_plot, Attention == "117 ms"),
+              aes(x =1.9, y = 0.58, label = "λ117ms (multiplicative coefficient on means)"),
+              size = 6, color = "black")+
+    geom_segment(data = subset(data_SDT_plot, Attention == "150 ms"),
+                 aes(x = 0, xend = 4.6, y = 0.58, yend = 0.58), 
+                 arrow = arrow(), color = "black")+
+    geom_segment(data = subset(data_SDT_plot, Attention == "150 ms"),
+                 aes(x = 4.4, xend = 4.6, y = 0.6, yend = 0.58), 
+                 arrow = arrow(), color = "black")+
+    geom_segment(data = subset(data_SDT_plot, Attention == "150 ms"),
+                 aes(x = 4.4, xend = 4.6, y = 0.56, yend = 0.58), 
+                 arrow = arrow(), color = "black")+
+    geom_text(data = subset(data_SDT_plot, Attention == "150 ms"),
+              aes(x =2.25, y = 0.63, label = "λ150ms"),
+              size = 6, color = "black")
+  
+  concept_plot <- concept_plot +
+    geom_segment(data = subset(data_SDT_plot, Attention == "83 ms"),
+                 aes(x = 3, xend = 4.15, y = 0.4/2, yend = 0.4/2), 
+                 arrow = arrow(), color = "black")+
+    geom_text(data = subset(data_SDT_plot, Attention == "83 ms"),
+              aes(x =3.6, y = 0.235, label = "σ83ms (=1)"),
+              size = 6, color = "black")+
+    geom_segment(data = subset(data_SDT_plot, Attention == "117 ms"),
+                 aes(x = 3*1.3, xend = 4.95, y = 0.44/2, yend = 0.44/2), 
+                 arrow = arrow(), color = "black")+
+    geom_text(data = subset(data_SDT_plot, Attention == "117 ms"),
+              aes(x =4.4, y = 0.26, label = "σ117ms"),
+              size = 6, color = "black")+
+    geom_segment(data = subset(data_SDT_plot, Attention == "150 ms"),
+                 aes(x = 4.5, xend = 5.4, y = 0.5/2, yend = 0.5/2), 
+                 arrow = arrow(), color = "black")+
+    geom_text(data = subset(data_SDT_plot, Attention == "150 ms"),
+              aes(x = 4.9, y = 0.29, label = "σ150ms"),
+              size = 6, color = "black")
+    
+    # annotate("text", x = 0.5, y = 0.5, label = "Sample Text", size = 6, color = colors[1]) +
+    # annotate("text", x = 1, y = 0.4, label = "Another Label", size = 6, color = "blue")
+  #element_line(size = 0.5, color = "black"),  # 軸線を表示
+  
+  ggplotly(concept_plot) %>% htmlwidgets::saveWidget("concept.html")
+  browseURL("concept.html")
   
 }
+
+# 平均値と標準偏差
+means_83ms <- c(mu83ms_gray, 0.5, 1, 1.5, 2, 2.5, 3)  
+means_117ms <- means_83ms * 1.3
+means_150ms <- means_83ms * 1.5
+means <- rbind(means_83ms,means_117ms,means_150ms)
+sd_83ms <- c(rep(sigma83ms, 7))  
+sd_117ms <- c(rep(0.9, 7))  
+sd_150ms <- c(rep(0.8, 7))  
+sds <- rbind(sd_83ms,sd_117ms,sd_150ms)
+
+attention_levels <- factor(c("83 ms", "117 ms", "150 ms"), levels = c("83 ms", "117 ms", "150 ms"))
+image_types <- factor(c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"))
+colors <- viridis(7, option = "plasma") 
+
+# 関数を呼び出し
+plot_sdt_concept(means, sds, attention_levels, image_types, colors)
+
+
 
