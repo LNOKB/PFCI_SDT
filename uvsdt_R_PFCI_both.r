@@ -501,8 +501,8 @@ plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
 #########積み上げグラフ#################################################
 
 data_bar <- data.frame(
-  ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3), 
-                     levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color")),
+  ImageType = factor(rep(c("gray","9 deg\nchimera", "13 deg\nchimera", "17 deg\nchimera", "21 deg\nchimera", "25 deg\nchimera", "color"), 3), 
+                     levels = c("gray", "9 deg\nchimera", "13 deg\nchimera", "17 deg\nchimera", "21 deg\nchimera", "25 deg\nchimera", "color")),
   Proportion =  as.vector(t(mean_data2)),
   SE =  as.vector(t(se_data2)),
   Condition = factor(c(rep("83 ms", 7),rep("117 ms", 7),rep("150 ms", 7)), 
@@ -510,8 +510,8 @@ data_bar <- data.frame(
 )
 
 predicted_data_bar <- data.frame(
-  ImageType = factor(rep(c("gray","9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), 3),
-                     levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color")),
+  ImageType = factor(rep(c("gray","9 deg\nchimera", "13 deg\nchimera", "17 deg\nchimera", "21 deg\nchimera", "25 deg\nchimera", "color"), 3),
+                     levels = c("gray", "9 deg\nchimera", "13 deg\nchimera", "17 deg\nchimera", "21 deg\nchimera", "25 deg\nchimera", "color")),
   Predicted = as.vector(t(mean_predicted2)),  # 仮の予測値
   Condition = factor(c(rep("83 ms", 7),rep("117 ms", 7),rep("150 ms", 7)), 
                      levels = c("83 ms", "117 ms", "150 ms"))
