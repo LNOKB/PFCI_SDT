@@ -1,5 +1,6 @@
 library(tidyverse)
 library(ggplot2)
+library(effectsize)
 #library(ggsignif)
 library(plotly)
 library(viridis)
@@ -326,20 +327,18 @@ for (i in 1:4){
   #now <- estimates[,i+6]
   t_test_below1 <- t.test(now, mu = 0, alternative = "less")
   t_test_above1 <- t.test(now, mu = 0, alternative = "greater")
+  effect_below1 <- cohens_d(now, mu = 0)
+  effect_above1 <- cohens_d(now, mu = 0)
   print(t_test_below1)
   print(t_test_above1)
+  print(effect_below1)
+  print(effect_above1)
+
 }
-
-text_data <- data.frame(
-  x = c(1, 3, 4),  # 各テキストのx座標
-  y = c(1.5, 0.5, 0.5),  # 各テキストのy座標
-  label = c("***", "*", "***")  # 表示するテキスト
-)
-
 
 
 data_parameter_plot <- data.frame(
-  Parameters = rep(c("λ 117ms", "λ 150ms", "σ 117ms", "σ 150ms"), each = 44),
+  Parameters =rep(c("λ117ms", "λ150ms", "σ117ms", "σ150ms"), each = 44),
   Value = c(estimates[,7], estimates[,8], estimates[,9], estimates[,10])
 )
 #data_parameter_plot$Value <- log(data_parameter_plot$Value)
@@ -348,19 +347,22 @@ data_parameter_plot <- data.frame(
 parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
   geom_violin(fill = "skyblue", color = "black") +  # ヴァイオリンプロットの描画
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  # y = 1 の位置に横線を追加
-  labs(x = "Parameters",
-       y = "Value") + 
-  coord_cartesian(ylim = c(0, 2)) +  
+  labs(y = "Value") + 
+  scale_y_continuous(breaks=seq(0.5,1.5,length=5),limits=c(0.5,1.5))+
   stat_summary(fun = mean, geom = "point", 
                shape =16, size = 2, color = "black")+
   theme_classic() +  # テーマの設定
   theme(
     plot.title = element_text(size = 20 * 2),    # タイトルのサイズを5倍に
-    axis.title.x = element_text(size = 14 * 2),  # x軸ラベルのサイズを5倍に
+    axis.title.x = element_blank(),  # y軸ラベルのサイズを5倍に
     axis.title.y = element_text(size = 14 * 2),  # y軸ラベルのサイズを5倍に
     axis.text.x = element_text(size = 11 * 2),   # x軸目盛りのサイズを5倍に
     axis.text.y = element_text(size = 11 * 2)    # y軸目盛りのサイズを5倍に
-  )
+  )+
+  # p値の追加
+  annotate("text", x = 1, y = 1.07, label = paste("***"), size = 10, color = "red") +
+  annotate("text", x = 3, y = 0.935, label = paste("*"), size = 10, color = "red") +
+  annotate("text", x = 4, y = 0.79, label = paste("***"), size = 10, color = "red") +
 
 ggplotly(parameters_graph) %>% htmlwidgets::saveWidget("parameters.html")
 browseURL("parameters.html")
@@ -470,7 +472,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
       axis.line = element_line(size = 0.5, color = "black"),  # 軸線を表示
       axis.ticks = element_line(color = "black"),  # メモリを表示
       axis.ticks.length = unit(0.3, "cm"),  # メモリの長さを調整
-      legend.position = "none"
+      legend.position =  c(0.1, 5),
     )
   
   ggplotly(p) %>% htmlwidgets::saveWidget("p.html")
