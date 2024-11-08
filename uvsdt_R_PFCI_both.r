@@ -44,7 +44,7 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
   # model fit
   fit <- suppressWarnings(optim(uvsdt_logL, 
                                 par = guess, 
-                                lower =      c(0.1, 0.1, 0.1, 0.1, 0.1, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5),
+                                lower =      c(0, 0, 0, 0, 0, 0, 0.5, 0.5, 0.5, 0.5, 0.5),
                                 upper =      c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, 2.0, 2.0, 5.0), 
                                 gr = NULL, method = "BFGS", 
                                 control = list("maxit" = 10000, 
@@ -128,6 +128,7 @@ fit_uvsdt_mle <- function(data, add_constant = TRUE) {
                     cri = cri, 
                     logL = logL,
                     AIC = AIC)
+  #,Rsquared = Rsquared
   return(list(est,predicted_data))
 }
 
@@ -207,6 +208,9 @@ uvsdt_logL <- function(x, inputs) {
   #else {
   # return(999999)
   #}
+  rss <- 
+    Rsquared <- 1
+  
   
 }
 
@@ -333,7 +337,7 @@ for (i in 1:4){
   print(t_test_above1)
   print(effect_below1)
   print(effect_above1)
-
+  
 }
 
 
@@ -349,29 +353,27 @@ parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  # y = 1 の位置に横線を追加
   labs(y = "Value") + 
   scale_y_continuous(breaks=seq(0.5,1.5,length=5),limits=c(0.5,1.5))+
+  scale_x_discrete("Parameters",labels=c(expression("λ"[117*ms]), expression("λ"[150*ms]), expression("σ"[117*ms]), expression("σ"[150*ms])))+
   stat_summary(fun = mean, geom = "point", 
                shape =16, size = 2, color = "black")+
   theme_classic() +  # テーマの設定
+  # p値の追加
+  annotate("text", x = 1, y = 1.07, label = paste("***"), size = 10, color = "red") +
+  annotate("text", x = 2, y = 1.04, label = paste("*"), size = 10, color = "red") +
+  annotate("text", x = 3, y = 0.9215, label = paste("*"), size = 10, color = "red") +
+  annotate("text", x = 4, y = 0.78, label = paste("***"), size = 10, color = "red") +
   theme(
     plot.title = element_text(size = 20 * 2),    # タイトルのサイズを5倍に
     axis.title.x = element_blank(),  # y軸ラベルのサイズを5倍に
     axis.title.y = element_text(size = 14 * 2),  # y軸ラベルのサイズを5倍に
     axis.text.x = element_text(size = 11 * 2),   # x軸目盛りのサイズを5倍に
     axis.text.y = element_text(size = 11 * 2)    # y軸目盛りのサイズを5倍に
-  )+
-  # p値の追加
-  annotate("text", x = 1, y = 1.07, label = paste("***"), size = 10, color = "red") +
-  annotate("text", x = 3, y = 0.935, label = paste("*"), size = 10, color = "red") +
-  annotate("text", x = 4, y = 0.79, label = paste("***"), size = 10, color = "red") +
+  )
 
-ggplotly(parameters_graph) %>% htmlwidgets::saveWidget("parameters.html")
-browseURL("parameters.html")
+plot(parameters_graph)
 
-# parameters_graph_plotly <- ggplotly(parameters_graph)
-# #plot(
-# parameters_graph_plotly
-
-#  geom_text(data = text_data, aes(x = x, y = y, label = label), color = "black", size = 6)
+#ggplotly(parameters_graph) %>% htmlwidgets::saveWidget("parameters.html")
+#browseURL("parameters.html") #ggplotlyはexpressionがうまくいかない
 
 
 # ################################################################################ 参加者ごとのSDTプロットの作成
@@ -434,6 +436,16 @@ browseURL("parameters.html")
 #   plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
 #   
 # }
+
+#################################################################R二乗値計算(estimatesにいれる？）#####################
+rsquared_mat <- matrix(NA, nrow=44, ncol=1)
+
+for (t in 4:47) {
+  rss <- sum((predicted_array[,2,t-3]-data_rate_array[,2,t-3])^2)
+  tss <- sum(data_rate_array[,2,t-3]-mean(data_rate_array[,2,t-3])^2)
+  rsquared <- 1-(rss/tss)
+  rsquared_mat[t-3,1] <- rsquared
+}
 
 ################################################################################ 参加者平均SDTの図示
 
@@ -523,7 +535,7 @@ predicted_data_bar <- data.frame(
 # グラフの作成
 bar_graph<-ggplot(data_bar, aes(x = ImageType, y = Proportion)) +
   geom_bar(stat = "identity", position = "stack") +
-  labs(x = NULL, y = "Color Response proportion (%)") +
+  labs(x = NULL, y = "Full-color response proportion (%)") +
   facet_grid(. ~ Condition) +  
   geom_point(data = predicted_data_bar, aes(x = ImageType, y = Predicted), 
              color = "red", size = 3) +  # モデルの予測値を示す点を追加 
@@ -686,7 +698,7 @@ plot_sdt_concept <- function(means, sds, attention_levels, image_types, colors) 
     x = c(1, 1),
     y = c(2, 2),
     Group = c("117 ms", "117 ms")
-    )
+  )
   
   
   concept_plot <- ggplot(data_SDT_plot, aes(x = x, y = y, color = ImageType)) +
@@ -709,8 +721,8 @@ plot_sdt_concept <- function(means, sds, attention_levels, image_types, colors) 
       axis.title.y = element_text(margin = margin(r = 0.1))  # Y軸ラベルの右マージンを設定
     )+ 
     geom_text(data = subset(data_SDT_plot, Attention == "83 ms"),
-                 aes(x = 0, y = 0.445, label = "μ83ms_gray"),
-                 size = 6, color = colors[1]) + 
+              aes(x = 0, y = 0.445, label = "μ83ms_gray"),
+              size = 6, color = colors[1]) + 
     geom_text(data = subset(data_SDT_plot, Attention == "83 ms"),
               aes(x = 0, y = 0.4, label = "|"),
               size = 6, color = colors[1])+ 
@@ -773,9 +785,9 @@ plot_sdt_concept <- function(means, sds, attention_levels, image_types, colors) 
     geom_text(data = subset(data_SDT_plot, Attention == "150 ms"),
               aes(x = 4.9, y = 0.29, label = "σ150ms"),
               size = 6, color = "black")
-    
-    # annotate("text", x = 0.5, y = 0.5, label = "Sample Text", size = 6, color = colors[1]) +
-    # annotate("text", x = 1, y = 0.4, label = "Another Label", size = 6, color = "blue")
+  
+  # annotate("text", x = 0.5, y = 0.5, label = "Sample Text", size = 6, color = colors[1]) +
+  # annotate("text", x = 1, y = 0.4, label = "Another Label", size = 6, color = "blue")
   #element_line(size = 0.5, color = "black"),  # 軸線を表示
   
   ggplotly(concept_plot) %>% htmlwidgets::saveWidget("concept.html")
