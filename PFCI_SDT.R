@@ -29,9 +29,8 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   }
   
   initial_mu <- function(data, each_index) {
-    data <- data + 0.5
-    each_color_rate <- data[each_index,2]/(data[each_index,1] + data[each_index,2])
-    gray_color_rate <- data[1,2]/(data[1,1] + data[1,2])
+    each_color_rate <- data[each_index, 2]/(data[each_index, 1] + data[each_index, 2])
+    gray_color_rate <- data[1, 2]/(data[1, 1] + data[1, 2])
     return(qnorm(each_color_rate) - qnorm(gray_color_rate))
   }
   
@@ -82,35 +81,35 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   sigma117ms <- fit$par[9] 
   sigma150ms <- fit$par[10]
   theta <- fit$par[11] 
-  rsquared <- fit$value
+  logL <- fit$value
   
   #prediction using the outputs
-  mu83ms_chimeras <- c(mu83ms_9deg,mu83ms_13deg,mu83ms_17deg,mu83ms_21deg,mu83ms_25deg)
+  mu83ms_chimeras <- c(mu83ms_9deg, mu83ms_13deg, mu83ms_17deg, mu83ms_21deg, mu83ms_25deg)
   predicted_data <- matrix(NA, nrow = 21, ncol = 2)
   #gray image
   mean_one_mat <- c(mu83ms_gray, mu83ms_gray*lambda117ms, mu83ms_gray*lambda150ms)
-  sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
+  sigmamat <- c(sigma83ms, sigma117ms, sigma150ms)
   for (cond in 1:3) {
     pred_gray_others_rate <- pnorm(theta, mean = mean_one_mat[cond], sd = sigmamat[cond])
     pred_gray_color_rate <- 1 - pred_gray_others_rate
-    pred_nr_gray_color <- sum(data[cond,1] + data[cond,2]) * pred_gray_color_rate
-    pred_nr_gray_others <- sum(data[cond,1] + data[cond,2]) * pred_gray_others_rate
-    predicted_data[cond,1] <- pred_gray_others_rate
-    predicted_data[cond,2] <- pred_gray_color_rate
+    pred_nr_gray_color <- sum(data[cond, 1] + data[cond, 2]) * pred_gray_color_rate
+    pred_nr_gray_others <- sum(data[cond, 1] + data[cond, 2]) * pred_gray_others_rate
+    predicted_data[cond, 1] <- pred_gray_others_rate
+    predicted_data[cond, 2] <- pred_gray_color_rate
   }
   #chimera image
   mean_one_mat <- c(mu83ms_chimeras, mu83ms_chimeras*lambda117ms, mu83ms_chimeras*lambda150ms)
-  sigmamat <- c(rep(sigma83ms,5),rep(sigma117ms,5),rep(sigma150ms,5))
+  sigmamat <- c(rep(sigma83ms, 5),rep(sigma117ms, 5),rep(sigma150ms, 5))
   for (cond in 4:18) {
     pred_chimera_others_rate <- pnorm(theta, mean = mean_one_mat[cond - 3], sd = sigmamat[cond - 3])
     pred_chimera_color_rate <- 1 - pred_chimera_others_rate
-    pred_nr_chimera_color <- sum(data[cond,1] + data[cond,2]) * pred_chimera_color_rate
-    pred_nr_chimera_others <- sum(data[cond,1] + data[cond,2]) * pred_chimera_others_rate
-    predicted_data[cond,1] <- pred_chimera_others_rate
-    predicted_data[cond,2] <- pred_chimera_color_rate
+    pred_nr_chimera_color <- sum(data[cond, 1] + data[cond, 2]) * pred_chimera_color_rate
+    pred_nr_chimera_others <- sum(data[cond, 1] + data[cond, 2]) * pred_chimera_others_rate
+    predicted_data[cond, 1] <- pred_chimera_others_rate
+    predicted_data[cond, 2] <- pred_chimera_color_rate
   }
   #full-color image
-  mean_two_mat <- c(mu83ms_color,mu83ms_color*lambda117ms,mu83ms_color*lambda150ms)
+  mean_two_mat <- c(mu83ms_color, mu83ms_color*lambda117ms, mu83ms_color*lambda150ms)
   sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
   for (cond in 19:21) {
     pred_color_others_rate <- pnorm(theta, mean = mean_two_mat[cond - 18], sd = sigmamat[cond - 18])
@@ -120,7 +119,11 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
     predicted_data[cond,1] <- pred_color_others_rate
     predicted_data[cond,2] <- pred_color_color_rate
   }
-  
+  #r squared
+  rss <- sum((predicted_data[,2] - data[,2])^2)
+  tss <- sum(data[,2] - mean(data[,2])^2)
+  rsquared <- 1 - (rss/tss)
+
   est <- data.frame(mu83ms_9deg   = mu83ms_9deg, 
                     mu83ms_13deg  = mu83ms_13deg, 
                     mu83ms_17deg  = mu83ms_17deg, 
@@ -132,6 +135,7 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
                     sigma117ms = sigma117ms,
                     sigma150ms = sigma150ms,
                     theta = theta,
+                    logL = logL,
                     rsquared = rsquared)
   return(list(est,predicted_data))
 }
@@ -153,7 +157,7 @@ PFCI_logL <- function(x, inputs) {
   theta <- x[11] 
   
   # model predictions
-  mu83ms_chimeras <- c(mu83ms_9deg,mu83ms_13deg,mu83ms_17deg,mu83ms_21deg,mu83ms_25deg)
+  mu83ms_chimeras <- c(mu83ms_9deg, mu83ms_13deg, mu83ms_17deg,mu83ms_21deg,mu83ms_25deg)
   predicted_data <- matrix(NA, nrow = 21, ncol = 2)
   #gray image
   mean_one_mat <- c(mu83ms_gray, mu83ms_gray*lambda117ms, mu83ms_gray*lambda150ms)
@@ -197,11 +201,6 @@ PFCI_logL <- function(x, inputs) {
   logL <- -logL
   return(logL)
   
-  #r squared
-  rss <- sum((predicted_data[,2] - data[,2])^2)
-  tss <- sum(data[,2] - mean(data[,2])^2)
-  rsquared <- 1 - (rss/tss)
-  return(rsquared)
   
 }
 
