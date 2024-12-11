@@ -28,6 +28,13 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
     data <- data + 0.5
   }
   
+  initial_mu <- function(data, each_index) {
+    data <- data + 0.5
+    each_color_rate <- data[each_index,2]/(data[each_index,1] + data[each_index,2])
+    gray_color_rate <- data[1,2]/(data[1,1] + data[1,2])
+    return(qnorm(each_color_rate) - qnorm(gray_color_rate))
+  }
+  
   #setting initial values
   guess <- c(
     initial_mu(data, 4),  # mu83ms_9deg
@@ -39,12 +46,7 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
     1, 1, 1, 1, 2         # lambda117ms, lambda150ms, sigma117ms, sigma150ms, theta 
   )
   
-  initial_mu <- function(data, each_index) {
-    data <- data + 0.5
-    each_color_rate <- data[each_index,2]/(data[each_index,1] + data[each_index,2])
-    gray_color_rate <- data[1,2]/(data[1,1] + data[1,2])
-    return(qnorm(each_color_rate) - qnorm(gray_color_rate))
-  }
+
   
   
   # fitting specifications
