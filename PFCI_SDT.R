@@ -22,7 +22,7 @@ result = dat %>%
 sigma83ms <- 1
 mu83ms_gray <- 0
 
-### fitting function
+### Fitting function
 fit_PFCI_mle <- function(data, add_constant = TRUE) {
   if (add_constant) {
     data <- data + 0.5
@@ -44,8 +44,6 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
     initial_mu(data, 19), # mu83ms_color
     1, 1, 1, 1, 2         # lambda117ms, lambda150ms, sigma117ms, sigma150ms, theta 
   )
-  
-  #関数にする
   
   # fitting specifications
   lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5, 0.5, 0.5, 0.5)
@@ -82,37 +80,12 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   theta <- fit$par[11] 
   logL <- fit$value
   
-  #prediction using the outputs
-  mu83ms_chimeras <- c(mu83ms_9deg, mu83ms_13deg, mu83ms_17deg, mu83ms_21deg, mu83ms_25deg)
-  predicted_data <- matrix(NA, nrow = 21, ncol = 2)
-  #gray image
-  mean_one_mat <- c(mu83ms_gray, mu83ms_gray*lambda117ms, mu83ms_gray*lambda150ms)
-  sigmamat <- c(sigma83ms, sigma117ms, sigma150ms)
-  for (cond in 1:3) {
-    predicted_data[cond, 1] <- pnorm(theta, mean = mean_one_mat[cond], sd = sigmamat[cond])　#pred_gray_others_rate 
-    predicted_data[cond, 2] <- 1 - predicted_data[cond, 1] #pred_gray_color_rate (predicted "full-color" responses rate for gray image)
-  }
-  #chimera image
-  mean_one_mat <- c(mu83ms_chimeras, mu83ms_chimeras*lambda117ms, mu83ms_chimeras*lambda150ms)
-  sigmamat <- c(rep(sigma83ms, 5),rep(sigma117ms, 5),rep(sigma150ms, 5))
-  for (cond in 4:18) {
-    predicted_data[cond, 1] <- pnorm(theta, mean = mean_one_mat[cond - 3], sd = sigmamat[cond - 3]) #pred_chimera_others_rate
-    predicted_data[cond, 2] <- 1 - predicted_data[cond, 1] #pred_chimera_color_rate 
-  }
-  #full-color image
-  mean_two_mat <- c(mu83ms_color, mu83ms_color*lambda117ms, mu83ms_color*lambda150ms)
-  sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
-  for (cond in 19:21) {
-    predicted_data[cond, 1] <- pnorm(theta, mean = mean_two_mat[cond - 18], sd = sigmamat[cond - 18]) #pred_color_others_rate
-    predicted_data[cond, 2] <- 1 - predicted_data[cond, 1]  #pred_color_color_rate
-  }
-  
   #r squared
   data_rate <- data / (data[, 1] + data[, 2])
-  rss <- sum((predicted_data[,2] - data_rate[,2])^2)
-  tss <- sum(data_rate[,2] - mean(data_rate)^2)
+  rss <- sum((global_predicted_data[,2] - data_rate[,2])^2)
+  tss <- sum((data_rate[,2] - mean(data_rate[,2]))^2)
   rsquared <- 1 - (rss/tss)
-
+   
   est <- data.frame(mu83ms_9deg   = mu83ms_9deg, 
                     mu83ms_13deg  = mu83ms_13deg, 
                     mu83ms_17deg  = mu83ms_17deg, 
@@ -126,7 +99,7 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
                     theta = theta,
                     logL = logL,
                     rsquared = rsquared)
-  return(list(est,predicted_data))
+  return(list(est,global_predicted_data))
 }
 
 ### Likelihood function
@@ -169,7 +142,8 @@ PFCI_logL <- function(x, inputs) {
     predicted_data[cond, 1] <- pnorm(theta, mean = mean_two_mat[cond - 18], sd = sigmamat[cond - 18]) #pred_color_others_rate
     predicted_data[cond, 2] <- 1 -  predicted_data[cond, 1] #pred_color_color_rate
   }
-
+  
+  global_predicted_data <<- predicted_data 
   # log likelihood
   logL <- sum(data * log(predicted_data))
   if (is.nan(logL)) {
@@ -178,9 +152,9 @@ PFCI_logL <- function(x, inputs) {
   logL <- -logL
   return(logL)
   
-  
 }
 
+### Conducting fitting on individual data
 estimates <- c()
 predicted_array <- array(NA, dim = c(21, 2, 44))
 data_rate_array <- array(NA, dim = c(21, 2, 44))
@@ -210,23 +184,25 @@ for (i in 4:47) {
   df <- fit[[1]]
   df$sub <- i
   estimates <- rbind(estimates, df)
-  a <- fit[[2]]
-  predicted_array[,,(i - 3)] <- a
+  predicted_array[,,(i - 3)] <-  fit[[2]]
 }
 
+
+### Preparation for data visualization
 mean_predicted <- apply(predicted_array, c(1, 2), mean)*100
-mean_predicted2 <- c(mean_predicted[1,2],mean_predicted[4:8,2],mean_predicted[19,2],mean_predicted[2,2],mean_predicted[9:13,2],mean_predicted[20,2],mean_predicted[3,2],mean_predicted[14:18,2],mean_predicted[21,2])
-se_predicted <- (apply(predicted_array, c(1, 2), sd)*100) / sqrt(44)
-se_predicted2 <- c(se_predicted[1,2],se_predicted[4:8,2],se_predicted[19,2],se_predicted[2,2],se_predicted[9:13,2],se_predicted[20,2],se_predicted[3,2],se_predicted[14:18,2],se_predicted[21,2])
-
 mean_data <-  apply(data_rate_array, c(1, 2), mean)*100
-mean_data2 <- c(mean_data[1,2],mean_data[4:8,2],mean_data[19,2],mean_data[2,2],mean_data[9:13,2],mean_data[20,2],mean_data[3,2],mean_data[14:18,2],mean_data[21,2])
 se_data <- (apply(data_rate_array, c(1, 2), sd)*100) / sqrt(44)
-se_data2 <- c(se_data[1,2],se_data[4:8,2],se_data[19,2],se_data[2,2],se_data[9:13,2],se_data[20,2],se_data[3,2],se_data[14:18,2],se_data[21,2])
+index_order <- c(
+  1, 4:8, 19, 
+  2, 9:13, 20, 
+  3, 14:18, 21
+)
+mean_predicted2 <- mean_predicted[index_order, 2]
+mean_data2 <- mean_data[index_order, 2]
+se_data2 <- se_data[index_order, 2]
 
 
-###sigma, lambda
-#t-test against sigma83ms, lambda83ms
+### t-test against sigma83ms, lambda83ms
 for (i in 1:4) {
   now <- log(estimates[,i + 6])
   t_test_below1 <- t.test(now, mu = 0, alternative = "less")
@@ -306,7 +282,9 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
   
 }
 
-means_83ms <- c(mu83ms_gray, mean(estimates[,1]), mean(estimates[,2]), mean(estimates[,3]), mean(estimates[,4]), mean(estimates[,5]),mean(estimates[,6]))  
+means_83ms <- c(
+  mu83ms_gray, mean(estimates[,1]), mean(estimates[,2]), mean(estimates[,3]), 
+  mean(estimates[,4]), mean(estimates[,5]),mean(estimates[,6]))  
 means_117ms <- means_83ms * mean(estimates[,7])
 means_150ms <- means_83ms * mean(estimates[,8])
 means <- rbind(means_83ms,means_117ms,means_150ms)
@@ -316,14 +294,14 @@ sd_150ms <- c(rep(mean(estimates[,10]), 7))
 sds <- rbind(sd_83ms,sd_117ms,sd_150ms)
 
 attention_levels <- factor(c("83 ms", "117 ms", "150 ms"), levels = c("83 ms", "117 ms", "150 ms"))
-image_types <- factor(c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"), levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"))
+image_types <- factor(
+  c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"),
+  levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"))
 colors <- viridis(7, option = "plasma") 
 
 plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
 
-
-
-###Model Prediction
+### Model Prediction
 
 data_bar <- data.frame(
   Imagetype = factor(rep(c("gray","chimera 9 degree", "chimera 13 degree", "chimera 17 degree", "chimera 21 degree", "chimera 25 degree", "full-color"), 3),
