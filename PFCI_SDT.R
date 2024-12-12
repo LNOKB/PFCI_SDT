@@ -158,7 +158,6 @@ PFCI_logL <- function(x, inputs) {
 estimates <- c()
 predicted_array <- array(NA, dim = c(21, 2, 44))
 data_rate_array <- array(NA, dim = c(21, 2, 44))
-data_rate_add <- array(NA, dim = c(21, 2, 44))
 
 for (i in 4:47) {
   
@@ -176,9 +175,7 @@ for (i in 4:47) {
   
   data_rate_array[,1,(i - 3)] <- data[,1]/(data[,1] + data[,2])
   data_rate_array[,2,(i - 3)] <- data[,2]/(data[,1] + data[,2])
-  data_rate_add[,1,(i - 3)] <- (data[,1] + 0.5)/((data[,1] + 0.5) + (data[,2] + 0.5))
-  data_rate_add[,2,(i - 3)] <- (data[,2] + 0.5)/((data[,1] + 0.5) + (data[,2] + 0.5))
-  
+ 
   #Fitting
   fit <- fit_PFCI_mle(data, add_constant = TRUE)
   df <- fit[[1]]
