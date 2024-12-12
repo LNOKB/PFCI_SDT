@@ -45,8 +45,7 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
     1, 1, 1, 1, 2         # lambda117ms, lambda150ms, sigma117ms, sigma150ms, theta 
   )
   
-
-  
+  #関数にする
   
   # fitting specifications
   lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5, 0.5, 0.5, 0.5)
@@ -90,38 +89,28 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   mean_one_mat <- c(mu83ms_gray, mu83ms_gray*lambda117ms, mu83ms_gray*lambda150ms)
   sigmamat <- c(sigma83ms, sigma117ms, sigma150ms)
   for (cond in 1:3) {
-    pred_gray_others_rate <- pnorm(theta, mean = mean_one_mat[cond], sd = sigmamat[cond])
-    pred_gray_color_rate <- 1 - pred_gray_others_rate
-    pred_nr_gray_color <- sum(data[cond, 1] + data[cond, 2]) * pred_gray_color_rate
-    pred_nr_gray_others <- sum(data[cond, 1] + data[cond, 2]) * pred_gray_others_rate
-    predicted_data[cond, 1] <- pred_gray_others_rate
-    predicted_data[cond, 2] <- pred_gray_color_rate
+    predicted_data[cond, 1] <- pnorm(theta, mean = mean_one_mat[cond], sd = sigmamat[cond])　#pred_gray_others_rate 
+    predicted_data[cond, 2] <- 1 - predicted_data[cond, 1] #pred_gray_color_rate (predicted "full-color" responses rate for gray image)
   }
   #chimera image
   mean_one_mat <- c(mu83ms_chimeras, mu83ms_chimeras*lambda117ms, mu83ms_chimeras*lambda150ms)
   sigmamat <- c(rep(sigma83ms, 5),rep(sigma117ms, 5),rep(sigma150ms, 5))
   for (cond in 4:18) {
-    pred_chimera_others_rate <- pnorm(theta, mean = mean_one_mat[cond - 3], sd = sigmamat[cond - 3])
-    pred_chimera_color_rate <- 1 - pred_chimera_others_rate
-    pred_nr_chimera_color <- sum(data[cond, 1] + data[cond, 2]) * pred_chimera_color_rate
-    pred_nr_chimera_others <- sum(data[cond, 1] + data[cond, 2]) * pred_chimera_others_rate
-    predicted_data[cond, 1] <- pred_chimera_others_rate
-    predicted_data[cond, 2] <- pred_chimera_color_rate
+    predicted_data[cond, 1] <- pnorm(theta, mean = mean_one_mat[cond - 3], sd = sigmamat[cond - 3]) #pred_chimera_others_rate
+    predicted_data[cond, 2] <- 1 - predicted_data[cond, 1] #pred_chimera_color_rate 
   }
   #full-color image
   mean_two_mat <- c(mu83ms_color, mu83ms_color*lambda117ms, mu83ms_color*lambda150ms)
   sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
   for (cond in 19:21) {
-    pred_color_others_rate <- pnorm(theta, mean = mean_two_mat[cond - 18], sd = sigmamat[cond - 18])
-    pred_color_color_rate <- 1 - pred_color_others_rate 
-    pred_nr_color_color <- sum(data[cond,1] + data[cond,2]) * pred_color_color_rate
-    pred_nr_color_others <- sum(data[cond,1] + data[cond,2]) * pred_color_others_rate
-    predicted_data[cond,1] <- pred_color_others_rate
-    predicted_data[cond,2] <- pred_color_color_rate
+    predicted_data[cond, 1] <- pnorm(theta, mean = mean_two_mat[cond - 18], sd = sigmamat[cond - 18]) #pred_color_others_rate
+    predicted_data[cond, 2] <- 1 - predicted_data[cond, 1]  #pred_color_color_rate
   }
+  
   #r squared
-  rss <- sum((predicted_data[,2] - data[,2])^2)
-  tss <- sum(data[,2] - mean(data[,2])^2)
+  data_rate <- data / (data[, 1] + data[, 2])
+  rss <- sum((predicted_data[,2] - data_rate[,2])^2)
+  tss <- sum(data_rate[,2] - mean(data_rate)^2)
   rsquared <- 1 - (rss/tss)
 
   est <- data.frame(mu83ms_9deg   = mu83ms_9deg, 
@@ -163,34 +152,22 @@ PFCI_logL <- function(x, inputs) {
   mean_one_mat <- c(mu83ms_gray, mu83ms_gray*lambda117ms, mu83ms_gray*lambda150ms)
   sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
   for (cond in 1:3) {
-    pred_gray_others_rate <- pnorm(theta, mean = mean_one_mat[cond], sd = sigmamat[cond])
-    pred_gray_color_rate <- 1 - pred_gray_others_rate
-    pred_nr_gray_color <- sum(data[cond,1] + data[cond,2]) * pred_gray_color_rate
-    pred_nr_gray_others <- sum(data[cond,1] + data[cond,2]) * pred_gray_others_rate
-    predicted_data[cond,1] <- pred_gray_others_rate
-    predicted_data[cond,2] <- pred_gray_color_rate
+    predicted_data[cond, 1] <- pnorm(theta, mean = mean_one_mat[cond], sd = sigmamat[cond]) #pred_gray_others_rate
+    predicted_data[cond, 2] <- 1 - predicted_data[cond, 1] #pred_gray_color_rate
   }
   #chimera image
   mean_one_mat <- c(mu83ms_chimeras, mu83ms_chimeras*lambda117ms, mu83ms_chimeras*lambda150ms)
   sigmamat <- c(rep(sigma83ms,5),rep(sigma117ms,5),rep(sigma150ms,5))
   for (cond in 4:18) {
-    pred_chimera_others_rate <- pnorm(theta, mean = mean_one_mat[cond - 3], sd = sigmamat[cond - 3])
-    pred_chimera_color_rate <- 1 - pred_chimera_others_rate
-    pred_nr_chimera_color <- sum(data[cond,1] + data[cond,2]) * pred_chimera_color_rate
-    pred_nr_chimera_others <- sum(data[cond,1] + data[cond,2]) * pred_chimera_others_rate
-    predicted_data[cond,1] <- pred_chimera_others_rate
-    predicted_data[cond,2] <- pred_chimera_color_rate
+    predicted_data[cond, 1] <- pnorm(theta, mean = mean_one_mat[cond - 3], sd = sigmamat[cond - 3]) #pred_chimera_others_rate
+    predicted_data[cond, 2] <- 1 - predicted_data[cond, 1] #pred_chimera_color_rate
   }
   #full-color image
   mean_two_mat <- c(mu83ms_color,mu83ms_color*lambda117ms,mu83ms_color*lambda150ms)
   sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
   for (cond in 19:21) {
-    pred_color_others_rate <- pnorm(theta, mean = mean_two_mat[cond - 18], sd = sigmamat[cond - 18])
-    pred_color_color_rate <- 1 - pred_color_others_rate
-    pred_nr_color_color <- sum(data[cond,1] + data[cond,2]) * pred_color_color_rate
-    pred_nr_color_others <- sum(data[cond,1] + data[cond,2]) * pred_color_others_rate
-    predicted_data[cond,1] <- pred_color_others_rate
-    predicted_data[cond,2] <- pred_color_color_rate
+    predicted_data[cond, 1] <- pnorm(theta, mean = mean_two_mat[cond - 18], sd = sigmamat[cond - 18]) #pred_color_others_rate
+    predicted_data[cond, 2] <- 1 -  predicted_data[cond, 1] #pred_color_color_rate
   }
 
   # log likelihood
@@ -237,7 +214,6 @@ for (i in 4:47) {
   predicted_array[,,(i - 3)] <- a
 }
 
-
 mean_predicted <- apply(predicted_array, c(1, 2), mean)*100
 mean_predicted2 <- c(mean_predicted[1,2],mean_predicted[4:8,2],mean_predicted[19,2],mean_predicted[2,2],mean_predicted[9:13,2],mean_predicted[20,2],mean_predicted[3,2],mean_predicted[14:18,2],mean_predicted[21,2])
 se_predicted <- (apply(predicted_array, c(1, 2), sd)*100) / sqrt(44)
@@ -247,7 +223,6 @@ mean_data <-  apply(data_rate_array, c(1, 2), mean)*100
 mean_data2 <- c(mean_data[1,2],mean_data[4:8,2],mean_data[19,2],mean_data[2,2],mean_data[9:13,2],mean_data[20,2],mean_data[3,2],mean_data[14:18,2],mean_data[21,2])
 se_data <- (apply(data_rate_array, c(1, 2), sd)*100) / sqrt(44)
 se_data2 <- c(se_data[1,2],se_data[4:8,2],se_data[19,2],se_data[2,2],se_data[9:13,2],se_data[20,2],se_data[3,2],se_data[14:18,2],se_data[21,2])
-
 
 
 ###sigma, lambda
