@@ -268,8 +268,6 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
       legend.position =  c(0.1, 5),
     )
   
-  #ggplotly(Distribution) %>% htmlwidgets::saveWidget("Distribution.html")
-  #browseURL("Distribution.html")
   plot(Distribution)
   ggsave(file = "Distribution2.png", plot = Distribution, dpi = 100, width = 16, height = 12)
   
@@ -345,8 +343,4 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
     limits = c(0, 100)                  
   ) 
 plot(bar_graph)
-ggsave(file = "bar_graph2.png", plot = bar_graph, dpi = 100, width = 21, height = 12)
-
-
-#ggplotly(bar_graph) %>% htmlwidgets::saveWidget("plot.html")
-#browseURL("plot.html")
+ggsave(file = "bar_graph2.png", plot = bar_graph, dpi = 150, width = 14, height = 8)

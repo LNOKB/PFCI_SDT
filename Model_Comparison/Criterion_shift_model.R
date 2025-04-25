@@ -44,7 +44,7 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
     initial_mu(data, 7),  # mu_21deg
     initial_mu(data, 8),  # mu_25deg
     initial_mu(data, 19), # mu_color
-    2, 2, 2         
+    2, 2, 2         # theta83ms, theta117ms, theta150ms
   )
   
   # fitting specifications
@@ -348,4 +348,4 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
     limits = c(0, 100)                  
   ) 
 plot(bar_graph)
-ggsave(file = "bar_graph3.png", plot = bar_graph, dpi = 100, width = 21, height = 12)
+ggsave(file = "bar_graph3.png", plot = bar_graph, dpi = 150, width = 14, height = 8)

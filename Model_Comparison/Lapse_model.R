@@ -199,7 +199,7 @@ parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) 
   labs(y = "Value") + 
   scale_y_continuous(breaks = seq(-0.1, 0.8, length = 10), limits = c(-0.1, 0.8)) +
 
-  scale_x_discrete("Parameters", labels = c(expression("lapse_rate"[83*ms]), expression("lapse_rate"[117*ms]),expression("lapse_rate"[150*ms]), "full-color_rate_under_lapse")) +
+  scale_x_discrete("Parameters", labels = c(expression("ε"[83*ms]), expression("ε"[117*ms]),expression("ε"[150*ms]), "γ")) +
   stat_summary(fun = mean, geom = "point",
                shape = 16, size = 5, color = "black") +
   theme_classic() +  
@@ -321,7 +321,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     )
 
   plot(Distribution)
-  ggsave(file = "Distribution4.png", plot = Distribution, dpi = 100, width = 16, height = 12)
+  ggsave(file = "bar_graph4.png", plot = bar_graph, dpi = 150, width = 14, height = 8)
   
   
 }
