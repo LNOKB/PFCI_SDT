@@ -207,7 +207,7 @@ for (i in 1:2) {
 
 # violin plot
 data_parameter_plot <- data.frame(
-  Parameters = rep(c("theta83ms","theta117ms", "theta150ms"), each = 44),
+  Parameters = rep(c("1.theta83ms","2.theta117ms", "3.theta150ms"), each = 44),
   Value = c(estimates[, 7], estimates[, 8], estimates[, 9])
 )
 parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
@@ -321,6 +321,8 @@ predicted_data_bar <- data.frame(
                      levels = c("83 ms", "117 ms", "150 ms"))
 )
 
+ann_text <- data.frame(Imagetype = "chimera 17 degree",Proportion = 100, Condition = factor("150 ms",levels = c("83 ms", "117 ms", "150 ms")))
+
 bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
   geom_bar(stat = "identity", position = "stack") +
   labs(x = NULL, y = "Full-color response proportion (%)") +
@@ -346,6 +348,8 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
   scale_y_continuous(
     breaks = seq(0, 100, by = 20),    
     limits = c(0, 100)                  
-  ) 
+  ) + 
+  geom_text(data = ann_text, label = paste("Sum logL =",  -round(sum(estimates[, 10]), 1), ", R squared = ", round(mean(estimates[, 11]), 3)), size = 4.65)
+
 plot(bar_graph)
 ggsave(file = "bar_graph3.png", plot = bar_graph, dpi = 150, width = 14, height = 8)

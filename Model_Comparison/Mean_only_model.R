@@ -316,6 +316,8 @@ predicted_data_bar <- data.frame(
                      levels = c("83 ms", "117 ms", "150 ms"))
 )
 
+ann_text <- data.frame(Imagetype = "chimera 17 degree",Proportion = 100, Condition = factor("150 ms",levels = c("83 ms", "117 ms", "150 ms")))
+
 bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
   geom_bar(stat = "identity", position = "stack") +
   labs(x = NULL, y = "Full-color response proportion (%)") +
@@ -341,6 +343,8 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
   scale_y_continuous(
     breaks = seq(0, 100, by = 20),    
     limits = c(0, 100)                  
-  ) 
+  ) + 
+  geom_text(data = ann_text, label = paste("Sum logL =",  -round(sum(estimates[, 10]), 1), ", R squared = ", round(mean(estimates[, 11]), 3)))
+
 plot(bar_graph)
 ggsave(file = "bar_graph2.png", plot = bar_graph, dpi = 150, width = 14, height = 8)
