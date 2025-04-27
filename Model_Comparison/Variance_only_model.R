@@ -48,8 +48,8 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   )
   
   # fitting specifications
-  lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5,  0.5)
-  upper_bounds <- c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0,  5.0)
+  lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5, 0.5)#0.001, 0.001, 
+  upper_bounds <- c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0,  2)#5.0)
   control_params <- list(
     "maxit" = 10000,
     "parscale" = c(1, 1, 1, 1, 1, 1, 0.001, 0.001,  1)
@@ -216,6 +216,7 @@ parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   labs(y = "Value") + 
   scale_y_continuous(breaks = seq(0.5, 1.5, length = 5), limits = c(0.5, 1.5)) +
+  #scale_y_continuous(breaks = seq(0, 1.5, length = 4), limits = c(0, 1.5)) +
   scale_x_discrete("Parameters", labels = c(expression("σ"[117*ms]), expression("σ"[150*ms]))) +
   stat_summary(fun = mean, geom = "point", 
                shape = 16, size = 2, color = "black") +
@@ -228,7 +229,7 @@ parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) 
     axis.text.y =  element_text(size = 11 * 2)    
   )
 plot(parameters_graph)
-ggsave(file = "parameters_graph1.png", plot = parameters_graph, dpi = 100, width = 20, height = 15)
+ggsave(file = "parameters_graph1.png", plot = parameters_graph, dpi = 150, width = 8, height = 6)
 
 
 

@@ -211,7 +211,7 @@ parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) 
     axis.text.y =  element_text(size = 11 * 2)    
   )
 plot(parameters_graph)
-ggsave(file = "parameters_graph4.png", plot = parameters_graph, dpi = 100, width = 20, height = 15)
+ggsave(file = "parameters_graph4.png", plot = parameters_graph, dpi = 150, width = 8, height = 6)
 
 
 ### Preparation for data visualization
@@ -281,7 +281,7 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
   geom_text(data = ann_text, label = paste("Sum logL =",  -round(sum(estimates[, 12]), 1), ", R squared = ", round(mean(estimates[, 13]), 3)))
 
 plot(bar_graph)
-ggsave(file = "bar_graph4.png", plot = bar_graph, dpi = 100, width = 21, height = 12)
+ggsave(file = "bar_graph4.png", plot = bar_graph, dpi = 150, width = 14, height = 8)
 
 
 
@@ -324,7 +324,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     )
 
   plot(Distribution)
-  ggsave(file = "bar_graph4.png", plot = bar_graph, dpi = 150, width = 14, height = 8)
+  ggsave(file = "Distribution4.png", plot = Distribution, dpi = 100, width = 16, height = 12)
   
   
 }

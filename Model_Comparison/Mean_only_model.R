@@ -227,7 +227,7 @@ parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) 
     axis.text.y =  element_text(size = 11 * 2)    
   )
 plot(parameters_graph)
-ggsave(file = "parameters_graph2.png", plot = parameters_graph, dpi = 100, width = 20, height = 15)
+ggsave(file = "parameters_graph2.png", plot = parameters_graph, dpi = 150, width = 8, height = 6)
 
 
 

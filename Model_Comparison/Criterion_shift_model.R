@@ -195,15 +195,15 @@ se_data2 <- se_data[index_order, 2]
 
 
 ### t-test against sigma83ms, lambda83ms
-for (i in 1:2) {
-  now <- log(estimates[, i + 6])
-  t_test_below1 <- t.test(now, mu = 0, alternative = "less")
-  t_test_above1 <- t.test(now, mu = 0, alternative = "greater")
-  effect <- cohens_d(now, mu = 0)
-  print(t_test_below1)
-  print(t_test_above1)
-  print(effect)
-}
+
+
+print(t.test(estimates[, 7], estimates[, 8], paired = TRUE))
+print(t.test(estimates[, 7], estimates[, 9], paired = TRUE))
+print(t.test(estimates[, 8], estimates[, 9], paired = TRUE))
+
+print(cohens_d(estimates[, 7] - estimates[, 8], mu = 0))
+print(cohens_d(estimates[, 7] - estimates[, 9], mu = 0))
+print(cohens_d(estimates[, 8] - estimates[, 9], mu = 0))
 
 # violin plot
 data_parameter_plot <- data.frame(
@@ -226,7 +226,7 @@ parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) 
     axis.text.y =  element_text(size = 11 * 2)    
   )
 plot(parameters_graph)
-ggsave(file = "parameters_graph3.png", plot = parameters_graph, dpi = 100, width = 20, height = 15)
+ggsave(file = "parameters_graph3.png", plot = parameters_graph, dpi = 150, width = 8, height = 6)
 
 
 
@@ -349,7 +349,7 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
     breaks = seq(0, 100, by = 20),    
     limits = c(0, 100)                  
   ) + 
-  geom_text(data = ann_text, label = paste("Sum logL =",  -round(sum(estimates[, 10]), 1), ", R squared = ", round(mean(estimates[, 11]), 3)), size = 4.65)
+  geom_text(data = ann_text, label = paste("Sum logL =",  -round(sum(estimates[, 10]), 1), ", R squared = ", round(mean(estimates[, 11]), 3)), size = 4.61)
 
 plot(bar_graph)
 ggsave(file = "bar_graph3.png", plot = bar_graph, dpi = 150, width = 14, height = 8)
