@@ -255,6 +255,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     scale_color_manual(values = colors) +
     labs(x = "Strength of peripheral color signal",
          y = "Probability density") +
+    scale_x_continuous(limits = c(-3, 6)) +
     scale_y_continuous(breaks = seq(0, 0.6, length = 7),limits = c(0, 0.6)) +
     geom_vline(xintercept = mean(estimates[, 11]), linetype = "dashed", color = "black") + 
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  
@@ -269,7 +270,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     )
   
   plot(Distribution)
-  ggsave(file = "Distribution2.png", plot = Distribution, dpi = 100, width = 16, height = 12)
+  ggsave(file = "Distribution2.png", plot = Distribution, dpi = 120, width = 12, height = 9)
   
   
 }
@@ -316,7 +317,22 @@ predicted_data_bar <- data.frame(
                      levels = c("83 ms", "117 ms", "150 ms"))
 )
 
-ann_text <- data.frame(Imagetype = "chimera 17 degree",Proportion = 100, Condition = factor("150 ms",levels = c("83 ms", "117 ms", "150 ms")))
+
+rsquareds <- array(NA, dim = c(44, 1, 1))
+for (ii in 1:44) {
+  
+  yhat <- predicted_array[,2,ii]
+  y <- data_rate_array[,2,ii]
+  ymean <- mean(y)
+  rss <- sum((yhat - y)^2)
+  tss <- sum((y - ymean)^2)
+  
+  rsquareds[ii] <- (1 - (rss/tss))
+  meanR2 <- mean(rsquareds)
+  sdR2 <- sd(rsquareds)
+}
+
+ann_text <- data.frame(Imagetype = "chimera 17 degree",Proportion = 95, Condition = factor("150 ms",levels = c("83 ms", "117 ms", "150 ms")))
 
 bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
   geom_bar(stat = "identity", position = "stack") +
@@ -344,7 +360,11 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
     breaks = seq(0, 100, by = 20),    
     limits = c(0, 100)                  
   ) + 
-  geom_text(data = ann_text, label = paste("Sum logL =",  -round(sum(estimates[, 10]), 1), ", R squared = ", round(mean(estimates[, 11]), 3)))
+  geom_text(data = ann_text, label = paste("Sum logL =",  -round(sum(estimates[, 10]), 1), ", \nR squared = ", round(meanR2, 3), "( SD = ", round(sdR2, 2), ")"), 
+            size = 7,
+            color = "red")
 
 plot(bar_graph)
 ggsave(file = "bar_graph2.png", plot = bar_graph, dpi = 150, width = 14, height = 8)
+
+
