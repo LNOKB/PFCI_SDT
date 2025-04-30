@@ -83,12 +83,6 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   theta <- fit$par[11] 
   logL <- fit$value
   
-  # r squared
-  data_rate <- data/(data[, 1] + data[, 2])
-  rss <- sum((global_predicted_data[, 2] - data_rate[, 2])^2)
-  tss <- sum((data_rate[, 2] - mean(data_rate[, 2]))^2)
-  rsquared <- 1 - (rss/tss)
-  
   est <- data.frame(mu_9deg   = mu_9deg, 
                     mu_13deg  = mu_13deg, 
                     mu_17deg  = mu_17deg, 
@@ -100,8 +94,7 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
                     lapse150ms = lapse150ms,
                     lapsetocolor = lapsetocolor,
                     theta = theta,
-                    logL = logL,
-                    rsquared = rsquared)
+                    logL = logL)
   return(list(est, global_predicted_data))
 }
 

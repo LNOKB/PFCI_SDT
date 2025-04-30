@@ -80,11 +80,6 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   theta <-   fit$par[9] 
   logL <-         fit$value
   
-  # r squared
-  data_rate <- data/(data[, 1] + data[, 2])
-  rss <- sum((global_predicted_data[, 2] - data_rate[, 2])^2)
-  tss <- sum((data_rate[, 2] - mean(data_rate[, 2]))^2)
-  rsquared <- 1 - (rss/tss)
   
   est <- data.frame(mu_9deg   = mu_9deg, 
                     mu_13deg  = mu_13deg, 
@@ -95,8 +90,7 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
                     sigma117ms = sigma117ms,
                     sigma150ms = sigma150ms,
                     theta = theta,
-                    logL = logL,
-                    rsquared = rsquared)
+                    logL = logL)
   return(list(est, global_predicted_data))
 }
 
@@ -195,7 +189,7 @@ mean_data2 <- mean_data[index_order, 2]
 se_data2 <- se_data[index_order, 2]
 
 
-### t-test against sigma83ms, lambda83ms
+### t-test against sigma117ms, sigma150ms
 for (i in 1:2) {
   now <- log(estimates[, i + 6])
   t_test_below1 <- t.test(now, mu = 0, alternative = "less")
