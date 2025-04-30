@@ -251,6 +251,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     scale_color_manual(values = colors) +
     labs(x = "Strength of peripheral color signal",
          y = "Probability density") +
+    scale_x_continuous(limits = c(-3, 6)) +
     scale_y_continuous(breaks = seq(0, 0.6, length = 7),limits = c(0, 0.6)) +
     geom_vline(xintercept = mean(estimates[, 11]), linetype = "dashed", color = "black") + 
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  
