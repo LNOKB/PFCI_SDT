@@ -81,12 +81,6 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   theta <-        fit$par[11] 
   logL <-         fit$value
   
-  # r squared
-  data_rate <- data/(data[, 1] + data[, 2])
-  rss <- sum((global_predicted_data[, 2] - data_rate[, 2])^2)
-  tss <- sum((data_rate[, 2] - mean(data_rate[, 2]))^2)
-  rsquared <- 1 - (rss/tss)
-  
   est <- data.frame(mu83ms_9deg   = mu83ms_9deg, 
                     mu83ms_13deg  = mu83ms_13deg, 
                     mu83ms_17deg  = mu83ms_17deg, 
@@ -98,8 +92,7 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
                     sigma117ms = sigma117ms,
                     sigma150ms = sigma150ms,
                     theta = theta,
-                    logL = logL,
-                    rsquared = rsquared)
+                    logL = logL)
   return(list(est, global_predicted_data))
 }
 
@@ -355,3 +348,20 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
 
 ggplotly(bar_graph) %>% htmlwidgets::saveWidget("plot.html")
 browseURL("plot.html")
+
+rsquareds <- array(NA, dim = c(44, 1, 1))
+for (ii in 1:44) {
+  
+  yhat <- predicted_array[,2,ii]
+  y <- data_rate_array[,2,ii]
+  ymean <- mean(y)
+  rss <- sum((yhat - y)^2)
+  tss <- sum((y - ymean)^2)
+  
+  rsquareds[ii] <- (1 - (rss/tss))
+  meanR2 <- mean(rsquareds)
+  sdR2 <- sd(rsquareds)
+}
+print(meanR2)
+print(sdR2)
+
