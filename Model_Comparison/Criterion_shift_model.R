@@ -204,12 +204,13 @@ data_parameter_plot <- data.frame(
   Value = c(estimates[, 7], estimates[, 8], estimates[, 9])
 )
 parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
-  geom_violin(fill = "skyblue", color = "black") +  
+  geom_violin(fill = "skyblue", color = "black", scale = "width") +  
+  geom_jitter() +
   labs(y = "Value") + 
   scale_y_continuous(breaks = seq(0, 5, length =6), limits = c(0, 5)) +
   scale_x_discrete("Parameters", labels = c(expression("θ"[83*ms]), expression("θ"[117*ms]), expression("θ"[150*ms]))) +
   stat_summary(fun = mean, geom = "point", 
-               shape = 16, size = 2, color = "black") +
+               shape = 18, size = 4, color = "black") +
   theme_classic() +  
   theme(
     plot.title =   element_text(size = 20 * 2),    

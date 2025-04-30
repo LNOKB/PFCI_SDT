@@ -206,14 +206,15 @@ data_parameter_plot <- data.frame(
   Value = c(estimates[, 7], estimates[, 8])
 )
 parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
-  geom_violin(fill = "skyblue", color = "black") +  
+  geom_violin(fill = "skyblue", color = "black", scale = "width") +  
+  geom_jitter() +
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   labs(y = "Value") + 
   scale_y_continuous(breaks = seq(0.5, 1.5, length = 5), limits = c(0.5, 1.5)) +
   #scale_y_continuous(breaks = seq(0, 1.5, length = 4), limits = c(0, 1.5)) +
   scale_x_discrete("Parameters", labels = c(expression("σ"[117*ms]), expression("σ"[150*ms]))) +
   stat_summary(fun = mean, geom = "point", 
-               shape = 16, size = 2, color = "black") +
+               shape = 18, size = 4, color = "black") +
   theme_classic() +  
   theme(
     plot.title =   element_text(size = 20 * 2),    
@@ -253,7 +254,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
          y = "Probability density") +
     scale_x_continuous(limits = c(-3, 6)) +
     scale_y_continuous(breaks = seq(0, 0.6, length = 7),limits = c(0, 0.6)) +
-    geom_vline(xintercept = mean(estimates[, 11]), linetype = "dashed", color = "black") + 
+    geom_vline(xintercept = mean(estimates[, 9]), linetype = "dashed", color = "black") + 
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  
     theme_minimal(base_size = 18) +
     theme(

@@ -45,7 +45,7 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
     initial_mu(data, 7),  # mu_21deg
     initial_mu(data, 8),  # mu_25deg
     initial_mu(data, 19), # mu_color
-    0.1, 0.1, 0.1, 0.33, 2         # lapse83ms, lapse117ms, lapse150ms, lapsetocolor, theta 
+    0.1, 0.1, 0.1, 0.33, 2         # ε83ms, ε117ms, ε150ms, γ, theta 
   )
   
   # fitting specifications
@@ -76,10 +76,10 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   mu_21deg <- fit$par[4] 
   mu_25deg <- fit$par[5] 
   mu_color <- fit$par[6] 
-  lapse83ms <- fit$par[7] 
-  lapse117ms <- fit$par[8] 
-  lapse150ms <- fit$par[9] 
-  lapsetocolor <- fit$par[10]
+  epsilon83ms <- fit$par[7] 
+  epsilon117ms <- fit$par[8] 
+  epsilon150ms <- fit$par[9] 
+  gamma <- fit$par[10]
   theta <- fit$par[11] 
   logL <- fit$value
   
@@ -89,10 +89,10 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
                     mu_21deg  = mu_21deg, 
                     mu_25deg  = mu_25deg, 
                     mu_color = mu_color,
-                    lapse83ms = lapse83ms,
-                    lapse117ms = lapse117ms,
-                    lapse150ms = lapse150ms,
-                    lapsetocolor = lapsetocolor,
+                    epsilon83ms = epsilon83ms,
+                    epsilon117ms = epsilon117ms,
+                    epsilon150ms = epsilon150ms,
+                    gamma = gamma,
                     theta = theta,
                     logL = logL)
   return(list(est, global_predicted_data))
@@ -109,32 +109,32 @@ PFCI_logL <- function(x, inputs) {
   mu_21deg <- x[4] 
   mu_25deg <- x[5] 
   mu_color <- x[6] 
-  lapse83ms <-  x[7] 
-  lapse117ms <-  x[8] 
-  lapse150ms <-   x[9] 
-  lapsetocolor <-   x[10]
+  epsilon83ms <-  x[7] 
+  epsilon117ms <-  x[8] 
+  epsilon150ms <-   x[9] 
+  gamma <-   x[10]
   theta <-        x[11] 
   
   # model predictions
   mu_chimeras <- c(mu_9deg, mu_13deg, mu_17deg,mu_21deg,mu_25deg)
   predicted_data <- matrix(NA, nrow = 21, ncol = 2)
   # gray image
-  lapsemat <- c(lapse83ms,lapse117ms,lapse150ms)
+  lapsemat <- c(epsilon83ms,epsilon117ms,epsilon150ms)
   for (cond in 1:3) {
-    predicted_data[cond, 1] <- lapsemat[cond] * (1 - lapsetocolor) + (1 - lapsemat[cond]) * pnorm(theta, mean = mu_gray, sd = sigma) # pred_gray_others_rate
+    predicted_data[cond, 1] <- lapsemat[cond] * (1 - gamma) + (1 - lapsemat[cond]) * pnorm(theta, mean = mu_gray, sd = sigma) # pred_gray_others_rate
     predicted_data[cond, 2] <- 1 - predicted_data[cond, 1] # pred_gray_color_rate
   }
   # chimera image
   mean_one_mat <- c(rep(mu_chimeras,3))
-  lapsemat <- c(rep(lapse83ms,5),rep(lapse117ms,5),rep(lapse150ms,5))
+  lapsemat <- c(rep(epsilon83ms,5),rep(epsilon117ms,5),rep(epsilon150ms,5))
   for (cond in 4:18) {
-    predicted_data[cond, 1] <- lapsemat[cond-3] * (1 - lapsetocolor) + (1 - lapsemat[cond-3]) * pnorm(theta, mean = mean_one_mat[cond - 3], sd = sigma) # pred_chimera_others_rate
+    predicted_data[cond, 1] <- lapsemat[cond-3] * (1 - gamma) + (1 - lapsemat[cond-3]) * pnorm(theta, mean = mean_one_mat[cond - 3], sd = sigma) # pred_chimera_others_rate
     predicted_data[cond, 2] <- 1 - predicted_data[cond, 1] # pred_chimera_color_rate
   }
   # full-color image
-  lapsemat <- c(lapse83ms,lapse117ms,lapse150ms)
+  lapsemat <- c(epsilon83ms,epsilon117ms,epsilon150ms)
   for (cond in 19:21) {
-    predicted_data[cond, 1] <-  lapsemat[cond-18] * (1 - lapsetocolor) + (1 - lapsemat[cond-18]) * pnorm(theta, mean = mu_color, sd = sigma) # pred_color_others_rate
+    predicted_data[cond, 1] <-  lapsemat[cond-18] * (1 - gamma) + (1 - lapsemat[cond-18]) * pnorm(theta, mean = mu_color, sd = sigma) # pred_color_others_rate
     predicted_data[cond, 2] <- 1 -  predicted_data[cond, 1] # pred_color_color_rate
   }
   
@@ -182,19 +182,19 @@ for (i in 4:47) {
 
 # violin plot
 data_parameter_plot <- data.frame(
-  Parameters = rep(c("1.lapse_rate_83ms", "2.lapse_rate_117ms", "3.lapse_rate_150ms", "4.full-color_rate_when_lapse"), each = 44),
+  Parameters = rep(c("1.epsilon_83ms", "2.epsilon_117ms", "3.epsilon_150ms", "4.gamma"), each = 44),
   Value = c(estimates[, 7], estimates[, 8], estimates[, 9], estimates[, 10])
 )
 parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
-  # geom_violin(fill = "skyblue", color = "black") +  
-  geom_boxplot(fill = "skyblue",outlier.shape = NA)+
-  geom_jitter()+
+  geom_violin(fill = "skyblue", color = "black", scale = "width") +
+  # geom_boxplot(fill = "skyblue",outlier.shape = NA)+
+  geom_jitter() +
   labs(y = "Value") + 
-  scale_y_continuous(breaks = seq(-0.1, 0.8, length = 10), limits = c(-0.1, 0.8)) +
+  scale_y_continuous(breaks = seq(-0.1, 1, length = 12), limits = c(-0.1, 1)) +
 
   scale_x_discrete("Parameters", labels = c(expression("ε"[83*ms]), expression("ε"[117*ms]),expression("ε"[150*ms]), "γ")) +
   stat_summary(fun = mean, geom = "point",
-               shape = 16, size = 5, color = "black") +
+               shape = 18, size = 4, color = "black") +
   theme_classic() +  
   theme(
     plot.title =   element_text(size = 20 * 2),    
@@ -360,7 +360,7 @@ colors <- viridis(7, option = "plasma")
 plot_sdt_distributions(means, sds, attention_levels, image_types, colors)
 
 
-rsquareds<-array(NA, dim = c(44, 1, 1))
+rsquareds <- array(NA, dim = c(44, 1, 1))
 for (ii in 1:44) {
   
   yhat <- predicted_array[,2,ii]

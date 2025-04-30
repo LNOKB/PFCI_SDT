@@ -187,7 +187,7 @@ mean_data2 <- mean_data[index_order, 2]
 se_data2 <- se_data[index_order, 2]
 
 
-### t-test against sigma83ms, lambda83ms
+### t-test against lambda117ms, lambda150ms
 for (i in 1:2) {
   now <- log(estimates[, i + 6])
   t_test_below1 <- t.test(now, mu = 0, alternative = "less")
@@ -205,12 +205,13 @@ data_parameter_plot <- data.frame(
 )
 parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
   geom_violin(fill = "skyblue", color = "black") +  
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  geom_jitter() +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black", scale = "width") +  
   labs(y = "Value") + 
   scale_y_continuous(breaks = seq(0.5, 1.5, length = 5), limits = c(0.5, 1.5)) +
   scale_x_discrete("Parameters", labels = c(expression("λ"[117*ms]), expression("λ"[150*ms]))) +
   stat_summary(fun = mean, geom = "point", 
-               shape = 16, size = 2, color = "black") +
+               shape = 18, size = 4, color = "black") +
   theme_classic() +  
   theme(
     plot.title =   element_text(size = 20 * 2),    
@@ -250,7 +251,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
          y = "Probability density") +
     scale_x_continuous(limits = c(-3, 6)) +
     scale_y_continuous(breaks = seq(0, 0.6, length = 7),limits = c(0, 0.6)) +
-    geom_vline(xintercept = mean(estimates[, 11]), linetype = "dashed", color = "black") + 
+    geom_vline(xintercept = mean(estimates[, 9]), linetype = "dashed", color = "black") + 
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  
     theme_minimal(base_size = 18) +
     theme(
