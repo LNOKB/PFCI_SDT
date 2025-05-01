@@ -205,18 +205,18 @@ data_parameter_plot <- data.frame(
 )
 parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
   geom_violin(fill = "skyblue", color = "black", scale = "width") +  
-  geom_jitter() +
+  geom_jitter(width = 0.1) +
   labs(y = "Value") + 
-  scale_y_continuous(breaks = seq(0, 5, length =6), limits = c(0, 5)) +
+  scale_y_continuous(breaks = seq(0, 5, length = 6), limits = c(0, 5)) +
   scale_x_discrete("Parameters", labels = c(expression("θ"[83*ms]), expression("θ"[117*ms]), expression("θ"[150*ms]))) +
   stat_summary(fun = mean, geom = "point", 
-               shape = 18, size = 4, color = "black") +
+               shape = 18, size = 6, color = "black") +
   theme_classic() +  
   theme(
     plot.title =   element_text(size = 20 * 2),    
     axis.title.x = element_blank(), 
     axis.title.y = element_text(size = 14 * 2),  
-    axis.text.x =  element_text(size = 11 * 2),  
+    axis.text.x =  element_text(size = 13 * 2),  
     axis.text.y =  element_text(size = 11 * 2)    
   )
 plot(parameters_graph)
@@ -253,7 +253,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     scale_color_manual(values = colors) +
     labs(x = "Strength of peripheral color signal",
          y = "Probability density") +
-    scale_y_continuous(breaks = seq(0, 0.6, length = 7),limits = c(0, 0.6)) +
+    scale_y_continuous(breaks = seq(0, 0.6, length = 4),limits = c(0, 0.6)) +
     geom_vline(data = vlines, aes(xintercept = xintercept), 
                linetype = "dashed", color = "black") + 
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  
@@ -268,7 +268,7 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     )
   
   plot(Distribution)
-  ggsave(file = "Distribution3.png", plot = Distribution, dpi = 120, width = 12, height = 9)
+  ggsave(file = "Distribution3.png", plot = Distribution, dpi = 150, width = 8, height = 6)
   
   
 }
@@ -329,7 +329,7 @@ for (ii in 1:44) {
   sdR2 <- sd(rsquareds)
 }
 
-ann_text <- data.frame(Imagetype = "chimera 17 degree",Proportion = 95, Condition = factor("150 ms",levels = c("83 ms", "117 ms", "150 ms")))
+ann_text <- data.frame(Imagetype = "chimera 17 degree",Proportion = 100, Condition = factor("150 ms",levels = c("83 ms", "117 ms", "150 ms")))
 
 bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
   geom_bar(stat = "identity", position = "stack") +
@@ -357,7 +357,7 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
     breaks = seq(0, 100, by = 20),    
     limits = c(0, 100)                  
   ) + 
-  geom_text(data = ann_text, label = paste("Sum logL =",  -round(sum(estimates[, 10]), 1), ", \nR squared = ", round(meanR2, 3), "( SD = ", round(sdR2, 2), ")"), 
+  geom_text(data = ann_text, label = paste("Summed log-likelihood =",  -round(sum(estimates[, 10]), 1)), 
             size = 7,
             color = "red")
 
