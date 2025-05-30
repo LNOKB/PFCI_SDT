@@ -135,8 +135,8 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   #origin: 11 19 20 22 31 36 39 add:13 26 37 44
   
   # fitting specifications
-  lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5, 0)
-  upper_bounds <- c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, 1/6)
+  lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5, 1/12)
+  upper_bounds <- c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, 1/11)
   control_params <- list(
     "maxit" = 10000,
     "parscale" = c(1, 1, 1, 1, 1, 1, lambda_parscale, lambda_parscale, 1)
@@ -217,7 +217,7 @@ PFCI_logL <- function(x) {
   
   mu83ms_chimeras <- c(mu83ms_9deg, mu83ms_13deg, mu83ms_17deg, mu83ms_21deg, mu83ms_25deg) 
   lambdas <- c(1, lambda117ms, lambda150ms) 
-  criteria <- posterior_probs(x_seq, mu83ms_chimeras, mu83ms_color, lambdas) #, prior_chimera_levels)
+  criteria <- posterior_probs(x_seq, mu83ms_chimeras, mu83ms_color, lambdas, prior_chimera_levels)
   
   #Prediction of full-color / other response 
   mean_gray_mat <- mu83ms_gray * lambdas
@@ -253,7 +253,8 @@ PFCI_logL <- function(x) {
 
 ### Conducting fitting on individual data
 col_names <- c("mu83ms_9deg", "mu83ms_13deg", "mu83ms_17deg", "mu83ms_21deg", "mu83ms_25deg",
-               "mu83ms_color", "lambda117ms", "lambda150ms", "theta83ms", "theta117ms", "theta150ms", "logL")
+               "mu83ms_color", "lambda117ms", "lambda150ms", "theta83ms", "theta117ms", "theta150ms", 
+               "prior_chimera_levels","prior_fullcolor", "logL")
 estimates <- data.frame(matrix(NA, nrow = 44, ncol = length(col_names)))
 colnames(estimates) <- col_names
 
@@ -267,7 +268,7 @@ clusterExport(cl, varlist = c(
 # i_vals <- setdiff(4:47, c(11, 19, 20, 22, 31, 36, 39))
 # i_vals <- c(11, 19, 20, 22, 31, 36, 39)
 fromsub <- 4
-tosub <- 10
+tosub <- 9
 results <- foreach(i = fromsub:tosub, .combine = 'rbind') %dopar% {
   
 # results <- foreach(i = c(5, 7, 10, 11, 14, 19, 21, 22, 26, 30, 33, 36, 41, 43, 44), .combine = 'rbind') %dopar% {
@@ -312,14 +313,14 @@ results <- foreach(i = fromsub:tosub, .combine = 'rbind') %dopar% {
 
 #8
 for (i in (fromsub - 3):(tosub - 3)){
-  estvec <- unlist(unname(results[i, 1:12]))
+  estvec <- unlist(unname(results[i, 1:14])) #1:12
   estimates[i, ] <- estvec
   
-  predvec <- unlist(unname(results[i, 13:54]))
+  predvec <- unlist(unname(results[i, 15:56])) #13:54
   pred_data <- matrix(predvec, nrow = 21, ncol = 2, byrow = TRUE)
   predicted_array[, , i] <- pred_data
   
-  datavec <- unlist(unname(results[i, 55:96]))
+  datavec <- unlist(unname(results[i, 57:98])) #55:96
   data_rate <- matrix(datavec, nrow = 21, ncol = 2, byrow = TRUE)
   data_rate_array[, , i] <- data_rate
 }
