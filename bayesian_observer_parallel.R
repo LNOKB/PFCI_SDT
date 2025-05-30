@@ -39,8 +39,10 @@ prior_fullcolor <- 5/12
 
 x_seq <- seq(-2, 6, length.out = 4000)
 
-posterior_probs <- function(x, mu83ms_chimeras, mu83ms_color, lambdas) {
+posterior_probs <- function(x, mu83ms_chimeras, mu83ms_color, lambdas, prior_chimera_levels) {
   criteria <- numeric(3)  
+ 
+  prior_fullcolor <- 1 - (prior_gray + prior_chimera_levels * 5)
   
   for (cond2 in 1:3) {
     
@@ -106,6 +108,8 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   initial_lambda117ms <- color_rate_117ms/color_rate_83ms
   initial_lambda150ms <- color_rate_150ms/color_rate_83ms
   
+  
+  
   # setting initial values
   guess <- c(
     initial_mu(data, 4),  # mu83ms_9deg
@@ -114,10 +118,13 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
     initial_mu(data, 7),  # mu83ms_21deg
     initial_mu(data, 8),  # mu83ms_25deg
     initial_mu(data, 19), # mu83ms_color
-    initial_lambda117ms,initial_lambda150ms         # lambda117ms, lambda150ms1.2, 1.4
+    initial_lambda117ms,
+    initial_lambda150ms ,
+    1/12
   )
   #   1.2,1.4
   # )
+
   
   if (i %in% c(13, 20, 22, 26, 37, 44)) {
     lambda_parscale <- 0.001
@@ -125,24 +132,17 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
     lambda_parscale <- 1
   }
 
-  # if (i %in% c(5, 7, 10, 11, 14, 19, 21, 22, 26, 30, 33, 36, 41, 43, 44)) {
-  #   mu_upper <- 1
-  #   lambda_upper <- 2.0
-  # } else {
-    mu_upper <- 5
-    lambda_upper <- 2.0
-  # }
-  
   #origin: 11 19 20 22 31 36 39 add:13 26 37 44
   
   # fitting specifications
-  lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5)
-  upper_bounds <- c(mu_upper, mu_upper, mu_upper, mu_upper, mu_upper, mu_upper, lambda_upper, lambda_upper)
+  lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5, 0)
+  upper_bounds <- c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, 1/6)
   control_params <- list(
     "maxit" = 10000,
-    "parscale" = c(0.01, 0.01, 0.01, 0.01, 0.01, 0.01, lambda_parscale, lambda_parscale)
+    "parscale" = c(1, 1, 1, 1, 1, 1, lambda_parscale, lambda_parscale, 1)
   )
   
+
   PFCI_logL_wrapper <- function(par) {
     PFCI_logL(par)$logL  
   }
@@ -177,6 +177,8 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   theta83ms <- criteria[1]
   theta117ms <- criteria[2]
   theta150ms <- criteria[3]
+  prior_chimera_levels <- fit$par[9]
+  prior_fullcolor <- 1 - (prior_gray + prior_chimera_levels * 5)
   logL <-         fit$value
   est <- data.frame(mu83ms_9deg   = mu83ms_9deg, 
                     mu83ms_13deg  = mu83ms_13deg, 
@@ -189,6 +191,8 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
                     theta83ms = theta83ms,
                     theta117ms = theta117ms, 
                     theta150ms = theta150ms,
+                    prior_chimera_levels = prior_chimera_levels,
+                    prior_fullcolor = prior_fullcolor,
                     logL = logL)
   return(list(est = est, predicted_data = predicted_data))
 }
@@ -209,10 +213,11 @@ PFCI_logL <- function(x) {
   mu83ms_color <- x[6] 
   lambda117ms <-  x[7] 
   lambda150ms <-  x[8] 
+  prior_chimera_levels <- x[9]
   
   mu83ms_chimeras <- c(mu83ms_9deg, mu83ms_13deg, mu83ms_17deg, mu83ms_21deg, mu83ms_25deg) 
   lambdas <- c(1, lambda117ms, lambda150ms) 
-  criteria <- posterior_probs(x_seq, mu83ms_chimeras, mu83ms_color, lambdas)
+  criteria <- posterior_probs(x_seq, mu83ms_chimeras, mu83ms_color, lambdas) #, prior_chimera_levels)
   
   #Prediction of full-color / other response 
   mean_gray_mat <- mu83ms_gray * lambdas
@@ -234,8 +239,6 @@ PFCI_logL <- function(x) {
     predicted_data[cond, 1] <- pnorm(criteria[cond-18], mean = mean_color_mat[cond-18], sd = sigma) # pred_color_others_rate
     predicted_data[cond, 2] <- 1 - predicted_data[cond, 1] # pred_color_color_rate
   }
-  
-  # predicted_array[, , (i - 3)] <- predicted_data
   
   #Calculation of log-Likelihood
   logL <- sum(data * log(predicted_data))
@@ -264,10 +267,10 @@ clusterExport(cl, varlist = c(
 # i_vals <- setdiff(4:47, c(11, 19, 20, 22, 31, 36, 39))
 # i_vals <- c(11, 19, 20, 22, 31, 36, 39)
 fromsub <- 4
-tosub <- 47
-
-results <- foreach(i = c(5, 7, 10, 11, 14, 19, 21, 22, 26, 30, 33, 36, 41, 43, 44), .combine = 'rbind') %dopar% {
-# results <- foreach(i = fromsub:tosub, .combine = 'rbind') %dopar% {
+tosub <- 10
+results <- foreach(i = fromsub:tosub, .combine = 'rbind') %dopar% {
+  
+# results <- foreach(i = c(5, 7, 10, 11, 14, 19, 21, 22, 26, 30, 33, 36, 41, 43, 44), .combine = 'rbind') %dopar% {
   subdata <- result[((i - 4) * 21 + 1):((i - 4) * 21 + 21), ]
   data <- matrix(NA, nrow = 21, ncol = 2)
   
@@ -326,7 +329,7 @@ stopCluster(cl)
 
 
 ### Each subject plot
-for (i in 4:47){
+for (i in fromsub : tosub){
   #47
   #Bar plot
   data_rate <- data_rate_array[, , (i - 3)]
