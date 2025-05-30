@@ -379,9 +379,9 @@ for (i in fromsub : tosub){
       legend.text =  element_text(size = 18),
       legend.title = element_text(size = 18)  #
     ) +
-    geom_text(data = ann_text, label = paste("Log-likelihood =",  -round(estimates[(i - 3), 12], 1)),
+    geom_text(data = ann_text, label = paste("Log-likelihood =",  -round(estimates[(i - 3), 14], 1)),
               size = 7,
-              color = "red")
+              color = "red") #12
   
   ggsave(file = file.path("SubPlotBar2", paste0("bar_graph_bayes_", i, ".png")),
          plot = bar_graph_sub, dpi = 150, width = 14, height = 8)
