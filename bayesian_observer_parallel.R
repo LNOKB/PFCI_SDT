@@ -122,13 +122,19 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   #   1.2,1.4
   # )
 
+  lambda_parscale <- 1
+  prior_parscale <- 0.001
   
-  if (i %in% c(13, 20, 22, 26, 37, 44)) {
+  if (i %in% c(11, 13, 19, 20, 22, 26, 31, 36, 37, 39, 44)) {
     lambda_parscale <- 0.001
   } else {
-    lambda_parscale <- 1
   }
 
+  if (i %in% c(11, 100)) {
+    prior_parscale <- 1
+  } else {
+  }
+  
   #origin: 11 19 20 22 31 36 39 add:13 26 37 44
   
   # fitting specifications
@@ -136,7 +142,7 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   upper_bounds <- c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, 10/12)
   control_params <- list(
     "maxit" = 10000,
-    "parscale" = c(1, 1, 1, 1, 1, 1, lambda_parscale, lambda_parscale, 0.001)
+    "parscale" = c(1, 1, 1, 1, 1, 1, lambda_parscale, lambda_parscale, prior_parscale)
   )
   
 
@@ -242,7 +248,7 @@ clusterExport(cl, varlist = c(
 # i_vals <- setdiff(4:47, c(11, 19, 20, 22, 31, 36, 39))
 # i_vals <- c(11, 19, 20, 22, 31, 36, 39)
 fromsub <- 4
-tosub <- 47
+tosub <- 10
 results <- foreach(i = fromsub:tosub, .combine = 'rbind') %dopar% {
   
 # results <- foreach(i = c(5, 7, 10, 11, 14, 19, 21, 22, 26, 30, 33, 36, 41, 43, 44), .combine = 'rbind') %dopar% {
