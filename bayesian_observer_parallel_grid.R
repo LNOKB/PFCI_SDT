@@ -39,9 +39,9 @@ col_names <- c("mu83ms_9deg", "mu83ms_13deg", "mu83ms_17deg", "mu83ms_21deg", "m
                "prior_chimera_levels","prior_fullcolor", "logL")
 
 
-posterior_probs <- function(x, mu83ms_chimeras, mu83ms_color, lambdas, prior_chimera_levels) {
+posterior_probs <- function(x, mu83ms_chimeras, mu83ms_color, lambdas, prior_fullcolor) {
   criteria <- numeric(3)  
-  prior_fullcolor <- 1 - (prior_gray + prior_chimera_levels * 5)
+  prior_chimera_levels <- (1 - prior_gray - prior_fullcolor)/5
   
   for (cond2 in 1:3) {
     
@@ -115,12 +115,12 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   }
   #origin: 11 19 20 22 31 36 39 add:13 26 37 44
   
-  grid <- seq(1/12.5, 1/11.5, length = 20)  
+  grid <- seq(0, 10/12, length = 20)  
   fitresults <- as.data.frame(matrix(0, nrow = length(grid), ncol = length(col_names)))
   colnames(fitresults) <- col_names
   
   for (iii in seq_along(grid)) {
-    prior_chimera_levels <- grid[iii]
+    prior_fullcolor <- grid[iii]
     guess <- c(
       initial_mu(data, 4),
       initial_mu(data, 5),
@@ -130,15 +130,15 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
       initial_mu(data, 19),
       initial_lambda117ms,
       initial_lambda150ms,
-      prior_chimera_levels  #グリッドで動かす
+      prior_fullcolor  #グリッドで動かす
     )
     
-    lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5, prior_chimera_levels) 
-    upper_bounds <- c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, prior_chimera_levels) 
+    lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5, prior_fullcolor) 
+    upper_bounds <- c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, prior_fullcolor) 
     
     control_params <- list(
       "maxit" = 10000,
-      "parscale" = c(1, 1, 1, 1, 1, 1, lambda_parscale, lambda_parscale, 1) #, 1
+      "parscale" = c(1, 1, 1, 1, 1, 1, lambda_parscale, lambda_parscale, 0.1) #, 1
     )
     
     PFCI_logL_wrapper <- function(par) {
@@ -164,8 +164,8 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
     fitresults[iii, col_names] <- c(
       fit$par[1:8],
       criteria[1:3],
-      prior_chimera_levels,
-      1 - (prior_gray + prior_chimera_levels * 5),
+      (1 - prior_gray - prior_fullcolor)/5,
+      prior_fullcolor,
       fit$value
     )
     
@@ -195,11 +195,11 @@ PFCI_logL <- function(x) {
   mu83ms_color <- x[6] 
   lambda117ms <-  x[7] 
   lambda150ms <-  x[8] 
-  prior_chimera_levels <- x[9]
+  prior_fullcolor <- x[9]
   
   mu83ms_chimeras <- c(mu83ms_9deg, mu83ms_13deg, mu83ms_17deg, mu83ms_21deg, mu83ms_25deg) 
   lambdas <- c(1, lambda117ms, lambda150ms) 
-  criteria <- posterior_probs(x_seq, mu83ms_chimeras, mu83ms_color, lambdas, prior_chimera_levels)
+  criteria <- posterior_probs(x_seq, mu83ms_chimeras, mu83ms_color, lambdas, prior_fullcolor)
   
   #Prediction of full-color / other response 
   mean_gray_mat <- mu83ms_gray * lambdas
