@@ -13,7 +13,6 @@ num_cores <- parallel::detectCores(logical = FALSE)
 cl <- makeCluster(num_cores - 1) #keep 1 core for system stability
 registerDoParallel(cl)
 
-
 dat <- read_csv("subdata.csv")
 result = dat %>%             
   filter(TorF1 %in% c(0, 1)) %>%
@@ -32,12 +31,14 @@ result = dat %>%
 sigma <- 1
 mu83ms_gray <- 0
 prior_gray <- 2/12
-x_seq <- seq(-2, 6, length.out = 4000)
+x_seq <- seq(-5, 15, length.out = 4000)
 
-col_names <- c("mu83ms_9deg", "mu83ms_13deg", "mu83ms_17deg", "mu83ms_21deg", "mu83ms_25deg",
+est_names <- c("mu83ms_9deg", "mu83ms_13deg", "mu83ms_17deg", "mu83ms_21deg", "mu83ms_25deg",
                "mu83ms_color", "lambda117ms", "lambda150ms", "theta83ms", "theta117ms", "theta150ms", 
                "prior_chimera_levels","prior_fullcolor", "logL")
 
+fromsub <- 4
+tosub <- 47
 
 posterior_probs <- function(x, mu83ms_chimeras, mu83ms_color, lambdas, prior_fullcolor) {
   criteria <- numeric(3)  
@@ -71,10 +72,22 @@ posterior_probs <- function(x, mu83ms_chimeras, mu83ms_color, lambdas, prior_ful
       posterior_full = posterior_full,
       max_class = max_class
     )
-    color_tmp <- subset(tmp, max_class == "FullColor")
-    min_x_row <- color_tmp[which.min(color_tmp$x), ]
-    # result_ideal <- rbind(result_ideal, tmp)
-    criteria[cond2] <- min_x_row$x
+    # color_tmp <- subset(tmp, max_class == "FullColor")
+    # min_x_row <- color_tmp[which.min(color_tmp$x), ]
+    # # result_ideal <- rbind(result_ideal, tmp)
+    # criteria[cond2] <- min_x_row$x
+    
+    if (any(tmp$max_class == "FullColor")) {
+      
+      color_tmp <- subset(tmp, max_class == "FullColor")
+      min_x_row <- color_tmp[which.min(color_tmp$x), ]
+      # result_ideal <- rbind(result_ideal, tmp)
+      criteria[cond2] <- min_x_row$x
+      
+    } else {
+      criteria[cond2] <- max(x_seq)
+    }
+    
   }
   return(criteria)
 }
@@ -167,9 +180,9 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   fitresult <- PFCI_logL(fit$par)  
   criteria <- fitresult$criteria
   predicted_data <- fitresult$predicted_data
-  est <- as.data.frame(matrix(0, nrow = 1, ncol = length(col_names)))
-  colnames(est) <- col_names
-  est[, col_names] <- c(
+  est <- as.data.frame(matrix(0, nrow = 1, ncol = length(est_names)))
+  colnames(est) <- est_names
+  est[, est_names] <- c(
     fit$par[1:8],
     criteria[1:3],
     (1 - prior_gray - fit$par[9])/5,
@@ -235,8 +248,8 @@ PFCI_logL <- function(x) {
 
 
 ### Conducting fitting on individual data
-estimates <- data.frame(matrix(NA, nrow = 44, ncol = length(col_names)))
-colnames(estimates) <- col_names
+estimates <- data.frame(matrix(NA, nrow = 44, ncol = length(est_names)))
+colnames(estimates) <- est_names
 
 data_rate_array <- array(NA, dim = c(21, 2, 44))
 predicted_array <- array(NA, dim = c(21, 2, 44))
@@ -247,8 +260,6 @@ clusterExport(cl, varlist = c(
 
 # i_vals <- setdiff(4:47, c(11, 19, 20, 22, 31, 36, 39))
 # i_vals <- c(11, 19, 20, 22, 31, 36, 39)
-fromsub <- 4
-tosub <- 10
 results <- foreach(i = fromsub:tosub, .combine = 'rbind') %dopar% {
   
 # results <- foreach(i = c(5, 7, 10, 11, 14, 19, 21, 22, 26, 30, 33, 36, 41, 43, 44), .combine = 'rbind') %dopar% {
@@ -271,23 +282,27 @@ results <- foreach(i = fromsub:tosub, .combine = 'rbind') %dopar% {
   data_rate[, 1] <- data[, 1] / (data[, 1] + data[, 2])
   data_rate[, 2] <- data[, 2] / (data[, 1] + data[, 2])
   
-  fit <- fit_PFCI_mle(data, add_constant = TRUE)
-  # df <- fit$est
-  # df$sub <- i
-  # 
-  # list(est = df, pred = fit$predicted_data, rate = data_rate)
-  est_vec <- as.numeric(fit$est)  # 13個のパラメータをベクトルに
-  pred_vec <- as.numeric(t(fit$predicted_data))  # 21*2 = 42個、列ベクトル化
-  rate_vec <- as.numeric(t(data_rate))            # 同様に42個
-  
-  # 名前付け用のベクトル作成
-  names_est <- names(fit$est) #paste0("est_", names(fit$est))
   names_pred <- paste0("pred_", rep(1:21, each=2), "_", rep(1:2, times=21))
   names_rate <- paste0("rate_", rep(1:21, each=2), "_", rep(1:2, times=21))
   
-  df <- data.frame(t(c(est_vec, pred_vec, rate_vec)))
-  colnames(df) <- c(names_est, names_pred, names_rate)
-  df$sub <- i
+  tryCatch({
+    
+    fit <- fit_PFCI_mle(data, add_constant = TRUE)
+    
+    est_vec <- as.numeric(fit$est)  
+    pred_vec <- as.numeric(t(fit$predicted_data))  
+    rate_vec <- as.numeric(t(data_rate))            
+    df <- data.frame(t(c(est_vec, pred_vec, rate_vec)))
+
+  }, error = function(e) {
+    
+    cat("Error: Fitting the model failed with message:", e$message, "\n")
+    df <- data.frame(matrix(NA, nrow=1, ncol=length(c(est_names, names_pred, names_rate))))
+    
+  })
+  
+  colnames(df) <- c(est_names, names_pred, names_rate) #names(fit$est)
+  # df$sub <- i
   df
 }
 
@@ -309,131 +324,131 @@ for (i in (fromsub - 3):(tosub - 3)){
 stopCluster(cl)
 
 
-### Each subject plot
-for (i in fromsub : tosub){
-  #47
-  #Bar plot
-  data_rate <- data_rate_array[, , (i - 3)]
-  predicted_data <- predicted_array[, , (i - 3)]
-  
-  index_order <- c(
-    1, 4:8,   19,
-    2, 9:13,  20,
-    3, 14:18, 21
-  )
-  predicted2 <- predicted_data[index_order, 2] * 100
-  data_rate2 <- data_rate[index_order, 2] * 100
-  
-  data_bar_sub <- data.frame(
-    Imagetype = factor(rep(c("gray","chimera 9 degree", "chimera 13 degree", "chimera 17 degree",
-                             "chimera 21 degree", "chimera 25 degree", "full-color"), 3),
-                       levels = c("gray","chimera 9 degree", "chimera 13 degree", "chimera 17 degree",
-                                  "chimera 21 degree", "chimera 25 degree", "full-color")),
-    Proportion =  as.vector(t(data_rate2)),
-    Condition = factor(c(rep("83 ms", 7), rep("117 ms", 7), rep("150 ms", 7)),
-                       levels = c("83 ms", "117 ms", "150 ms"))
-  )
-  
-  predicted_data_bar_sub <- data_bar_sub
-  predicted_data_bar_sub <- predicted_data_bar_sub %>% rename(Predicted = Proportion)
-  predicted_data_bar_sub$Predicted <- as.vector(t(predicted2))
-  ann_text <- data.frame(Imagetype = "chimera 17 degree",Proportion = 100, Condition = factor("150 ms",levels = c("83 ms", "117 ms", "150 ms")))
-  
-  bar_graph_sub <- ggplot(data_bar_sub, aes(x = Imagetype, y = Proportion)) +
-    geom_bar(stat = "identity", position = "stack") +
-    labs(x = NULL, y = "Full-color response proportion (%)") +
-    facet_grid(. ~ Condition) +
-    geom_point(data = predicted_data_bar_sub, aes(x = Imagetype, y = Predicted),
-               color = "red", size = 3) +
-    theme(legend.position = "right", text = element_text(family = "Arial")) +
-    theme(
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      plot.title =   element_text(size = 20 * 2),
-      axis.title.x = element_text(size = 14 * 2),
-      axis.title.y = element_text(size = 14 * 2),
-      axis.text.x =  element_text(size = 24, angle = 45, hjust = 1, color = "black"),
-      axis.text.y =  element_text(size = 11 * 2),
-      legend.position = "right",
-      strip.text =   element_text(size = 36),
-      legend.text =  element_text(size = 18),
-      legend.title = element_text(size = 18)  #
-    ) +
-    geom_text(data = ann_text, label = paste("Log-likelihood =",  -round(estimates[(i - 3), 14], 1)),
-              size = 7,
-              color = "red") #12
-  
-  ggsave(file = file.path("SubPlotBar2", paste0("bar_graph_bayes_", i, ".png")),
-         plot = bar_graph_sub, dpi = 150, width = 14, height = 8)
-  
-  
-  #Distribution
-  
-  plot_sdt_distributions_ideal_sub <- function(means, sds, attention_levels, image_types, colors) {
-    data_SDT_plot_ideal_sub <- data.frame()
-    
-    for (ii in 1:length(attention_levels)) {
-      for (jj in 1:length(image_types)) {
-        x <- seq(means[ii, jj] - 3 * sds[ii, jj], means[ii, jj] + 3 * sds[ii, jj], length.out = 100)
-        y <- dnorm(x, mean = means[ii, jj], sd = sds[ii, jj])
-        
-        data_SDT_plot_ideal_sub <- rbind(data_SDT_plot_ideal_sub, data.frame(
-          x = x,
-          y = y,
-          Attention = attention_levels[ii],
-          ImageType = image_types[jj],
-          color = colors[jj]
-        ))
-      }
-    }
-    
-    vlines_ideal_sub <- data.frame(
-      Attention = attention_levels,
-      xintercept = c(estimates[(i - 3), 9], estimates[(i - 3), 10], estimates[(i - 3), 11]))
-    
-    Distribution_ideal_sub <- ggplot(data_SDT_plot_ideal_sub, aes(x = x, y = y, color = ImageType)) +
-      geom_line(size = 1.2) +
-      scale_color_manual(values = colors) +
-      labs(x = "Strength of peripheral color signal",
-           y = "Probability density") +
-      scale_x_continuous(limits = c(-3, 8)) +
-      scale_y_continuous(breaks = seq(0, 0.6, length = 4),limits = c(0, 0.6)) +
-      geom_vline(data = vlines_ideal_sub, aes(xintercept = xintercept),
-                 linetype = "dashed", color = "black") +
-      facet_wrap(~ Attention, nrow = 3, scales = "free_y") +
-      theme_minimal(base_size = 18) +
-      theme(
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.line = element_line(size = 0.5, color = "black"),
-        axis.ticks = element_line(color = "black"),
-        axis.ticks.length = unit(0.3, "cm"),
-        legend.position =  c(0.1, 5),
-      )
-    
-    ggsave(file = file.path("SubPlotDistribution2", paste0("Distribution_ideal_", i, ".png")),
-           plot = Distribution_ideal_sub, dpi = 150, width = 8, height = 6)
-  }
-  
-  means_83ms <- c(mu83ms_gray, estimates[(i - 3), 1], estimates[(i - 3), 2],
-                  estimates[(i - 3), 3], estimates[(i - 3), 4],
-                  estimates[(i - 3), 5], estimates[(i - 3), 6])
-  means_117ms <- means_83ms * estimates[(i - 3), 7]
-  means_150ms <- means_83ms * estimates[(i - 3), 8]
-  means <- rbind(means_83ms, means_117ms, means_150ms)
-  sd_83ms <-  c(rep(sigma, 7))
-  sd_117ms <- sd_83ms
-  sd_150ms <- sd_83ms
-  sds <- rbind(sd_83ms, sd_117ms, sd_150ms)
-  
-  attention_levels <- factor(c("83 ms", "117 ms", "150 ms"), levels = c("83 ms", "117 ms", "150 ms"))
-  image_types <- factor(
-    c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"),
-    levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"))
-  colors <- viridis(7, option = "plasma")
-  
-  plot_sdt_distributions_ideal_sub(means, sds, attention_levels, image_types, colors)
-}
+# ### Each subject plot
+# for (i in fromsub : tosub){
+#   #47
+#   #Bar plot
+#   data_rate <- data_rate_array[, , (i - 3)]
+#   predicted_data <- predicted_array[, , (i - 3)]
+#   
+#   index_order <- c(
+#     1, 4:8,   19,
+#     2, 9:13,  20,
+#     3, 14:18, 21
+#   )
+#   predicted2 <- predicted_data[index_order, 2] * 100
+#   data_rate2 <- data_rate[index_order, 2] * 100
+#   
+#   data_bar_sub <- data.frame(
+#     Imagetype = factor(rep(c("gray","chimera 9 degree", "chimera 13 degree", "chimera 17 degree",
+#                              "chimera 21 degree", "chimera 25 degree", "full-color"), 3),
+#                        levels = c("gray","chimera 9 degree", "chimera 13 degree", "chimera 17 degree",
+#                                   "chimera 21 degree", "chimera 25 degree", "full-color")),
+#     Proportion =  as.vector(t(data_rate2)),
+#     Condition = factor(c(rep("83 ms", 7), rep("117 ms", 7), rep("150 ms", 7)),
+#                        levels = c("83 ms", "117 ms", "150 ms"))
+#   )
+#   
+#   predicted_data_bar_sub <- data_bar_sub
+#   predicted_data_bar_sub <- predicted_data_bar_sub %>% rename(Predicted = Proportion)
+#   predicted_data_bar_sub$Predicted <- as.vector(t(predicted2))
+#   ann_text <- data.frame(Imagetype = "chimera 17 degree",Proportion = 100, Condition = factor("150 ms",levels = c("83 ms", "117 ms", "150 ms")))
+#   
+#   bar_graph_sub <- ggplot(data_bar_sub, aes(x = Imagetype, y = Proportion)) +
+#     geom_bar(stat = "identity", position = "stack") +
+#     labs(x = NULL, y = "Full-color response proportion (%)") +
+#     facet_grid(. ~ Condition) +
+#     geom_point(data = predicted_data_bar_sub, aes(x = Imagetype, y = Predicted),
+#                color = "red", size = 3) +
+#     theme(legend.position = "right", text = element_text(family = "Arial")) +
+#     theme(
+#       panel.grid.major = element_blank(),
+#       panel.grid.minor = element_blank(),
+#       plot.title =   element_text(size = 20 * 2),
+#       axis.title.x = element_text(size = 14 * 2),
+#       axis.title.y = element_text(size = 14 * 2),
+#       axis.text.x =  element_text(size = 24, angle = 45, hjust = 1, color = "black"),
+#       axis.text.y =  element_text(size = 11 * 2),
+#       legend.position = "right",
+#       strip.text =   element_text(size = 36),
+#       legend.text =  element_text(size = 18),
+#       legend.title = element_text(size = 18)  #
+#     ) +
+#     geom_text(data = ann_text, label = paste("Log-likelihood =",  -round(estimates[(i - 3), 14], 1)),
+#               size = 7,
+#               color = "red") #12
+#   
+#   ggsave(file = file.path("SubPlotBar2", paste0("bar_graph_bayes_", i, ".png")),
+#          plot = bar_graph_sub, dpi = 150, width = 14, height = 8)
+#   
+#   
+#   #Distribution
+#   
+#   plot_sdt_distributions_ideal_sub <- function(means, sds, attention_levels, image_types, colors) {
+#     data_SDT_plot_ideal_sub <- data.frame()
+#     
+#     for (ii in 1:length(attention_levels)) {
+#       for (jj in 1:length(image_types)) {
+#         x <- seq(means[ii, jj] - 3 * sds[ii, jj], means[ii, jj] + 3 * sds[ii, jj], length.out = 100)
+#         y <- dnorm(x, mean = means[ii, jj], sd = sds[ii, jj])
+#         
+#         data_SDT_plot_ideal_sub <- rbind(data_SDT_plot_ideal_sub, data.frame(
+#           x = x,
+#           y = y,
+#           Attention = attention_levels[ii],
+#           ImageType = image_types[jj],
+#           color = colors[jj]
+#         ))
+#       }
+#     }
+#     
+#     vlines_ideal_sub <- data.frame(
+#       Attention = attention_levels,
+#       xintercept = c(estimates[(i - 3), 9], estimates[(i - 3), 10], estimates[(i - 3), 11]))
+#     
+#     Distribution_ideal_sub <- ggplot(data_SDT_plot_ideal_sub, aes(x = x, y = y, color = ImageType)) +
+#       geom_line(size = 1.2) +
+#       scale_color_manual(values = colors) +
+#       labs(x = "Strength of peripheral color signal",
+#            y = "Probability density") +
+#       scale_x_continuous(limits = c(-5, 15)) +
+#       scale_y_continuous(breaks = seq(0, 0.6, length = 4),limits = c(0, 0.6)) +
+#       geom_vline(data = vlines_ideal_sub, aes(xintercept = xintercept),
+#                  linetype = "dashed", color = "black") +
+#       facet_wrap(~ Attention, nrow = 3, scales = "free_y") +
+#       theme_minimal(base_size = 18) +
+#       theme(
+#         panel.grid.major = element_blank(),
+#         panel.grid.minor = element_blank(),
+#         axis.line = element_line(size = 0.5, color = "black"),
+#         axis.ticks = element_line(color = "black"),
+#         axis.ticks.length = unit(0.3, "cm"),
+#         legend.position =  c(0.1, 5),
+#       )
+#     
+#     ggsave(file = file.path("SubPlotDistribution2", paste0("Distribution_ideal_", i, ".png")),
+#            plot = Distribution_ideal_sub, dpi = 150, width = 8, height = 6)
+#   }
+#   
+#   means_83ms <- c(mu83ms_gray, estimates[(i - 3), 1], estimates[(i - 3), 2],
+#                   estimates[(i - 3), 3], estimates[(i - 3), 4],
+#                   estimates[(i - 3), 5], estimates[(i - 3), 6])
+#   means_117ms <- means_83ms * estimates[(i - 3), 7]
+#   means_150ms <- means_83ms * estimates[(i - 3), 8]
+#   means <- rbind(means_83ms, means_117ms, means_150ms)
+#   sd_83ms <-  c(rep(sigma, 7))
+#   sd_117ms <- sd_83ms
+#   sd_150ms <- sd_83ms
+#   sds <- rbind(sd_83ms, sd_117ms, sd_150ms)
+#   
+#   attention_levels <- factor(c("83 ms", "117 ms", "150 ms"), levels = c("83 ms", "117 ms", "150 ms"))
+#   image_types <- factor(
+#     c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"),
+#     levels = c("gray", "9 deg", "13 deg", "17 deg", "21 deg", "25 deg", "color"))
+#   colors <- viridis(7, option = "plasma")
+#   
+#   plot_sdt_distributions_ideal_sub(means, sds, attention_levels, image_types, colors)
+# }
 
 ### End of Each subject plot
 # 
