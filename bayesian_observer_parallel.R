@@ -136,7 +136,7 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   # )
 
   lambda_parscale <- 1
-  prior_parscale <- 1 #0.01はNA数はかわらないが0.001よりはわずかに動く
+  prior_parscale <- 0.1 #0.01はNA数はかわらないが0.001よりはわずかに動く
   
   # if (i %in% c(11, 13, 19, 20, 22, 26, 31, 36, 37, 39, 44)) {
   #   lambda_parscale <- 0.001
