@@ -136,23 +136,23 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   # )
 
   lambda_parscale <- 1
-  prior_parscale <- 0.001
+  prior_parscale <- 1 #0.01はNA数はかわらないが0.001よりはわずかに動く
   
-  if (i %in% c(11, 13, 19, 20, 22, 26, 31, 36, 37, 39, 44)) {
-    lambda_parscale <- 0.001
-  } else {
-  }
-
-  if (i %in% c(11, 100)) {
-    prior_parscale <- 1
-  } else {
-  }
+  # if (i %in% c(11, 13, 19, 20, 22, 26, 31, 36, 37, 39, 44)) {
+  #   lambda_parscale <- 0.001
+  # } else {
+  # }
+  # 
+  # if (i %in% c(11, 100)) {
+  #   prior_parscale <- 1
+  # } else {
+  # }
   
   #origin: 11 19 20 22 31 36 39 add:13 26 37 44
   
   # fitting specifications
-  lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5, 0)
-  upper_bounds <- c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, 10/12)
+  lower_bounds <- c(0, 0, 0, 0, 0, 0, 0.5, 0.5, 3/12)
+  upper_bounds <- c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, 7/12)
   control_params <- list(
     "maxit" = 10000,
     "parscale" = c(1, 1, 1, 1, 1, 1, lambda_parscale, lambda_parscale, prior_parscale)
@@ -284,6 +284,7 @@ results <- foreach(i = fromsub:tosub, .combine = 'rbind') %dopar% {
   
   names_pred <- paste0("pred_", rep(1:21, each=2), "_", rep(1:2, times=21))
   names_rate <- paste0("rate_", rep(1:21, each=2), "_", rep(1:2, times=21))
+  df <- data.frame(matrix(NA, nrow=1, ncol=length(c(est_names, names_pred, names_rate))))
   
   tryCatch({
     
@@ -297,7 +298,6 @@ results <- foreach(i = fromsub:tosub, .combine = 'rbind') %dopar% {
   }, error = function(e) {
     
     cat("Error: Fitting the model failed with message:", e$message, "\n")
-    df <- data.frame(matrix(NA, nrow=1, ncol=length(c(est_names, names_pred, names_rate))))
     
   })
   
