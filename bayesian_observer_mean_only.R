@@ -370,6 +370,7 @@ stopCluster(cl)
 for (j in 1:length(subs)){
   estvec <- unlist(unname(results[j, 1:14])) #1:12
   estimates[j, ] <- estvec
+  estimates[j, 14] <- -estimates[j, 14] 
   
   predvec <- unlist(unname(results[j, 15:56])) #13:54
   pred_data <- matrix(predvec, nrow = 21, ncol = 2, byrow = TRUE)
@@ -432,7 +433,7 @@ for (k in 1:length(subs)){
       legend.text =  element_text(size = 18),
       legend.title = element_text(size = 18)  #
     ) +
-    geom_text(data = ann_text, label = paste("Log-likelihood =",  -round(estimates[k, 14], 1)),
+    geom_text(data = ann_text, label = paste("Log-likelihood =",  round(estimates[k, 14], 1)),
               size = 7,
               color = "red") #12
   
