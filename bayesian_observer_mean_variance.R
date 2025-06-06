@@ -112,86 +112,86 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   lower_bounds <- c(0,   0,   0,   0,   0,   0,   0.5, 0.5, 0.125, 0.5, 0.5)
   upper_bounds <- c(3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.0, 2.0, 0.675, 2, 2)
   
-  if (i %in% c(6, 12, 16, 18, 21, 25, 28, 29, 46, 47)) {
-    initial_prior <- 2.5/12
-    min_prior <- 1.5/12
-    max_prior <- 7.5/12
-    parscales <- c(100, 100, 100, 100, 100, 100, 10, 10, 0.5, 10, 10)
-
-  } else if (i %in% c(4, 24, 35, 40, 42)) {
-    initial_prior <- 5/12
-    min_prior <- 2.5/12
-    max_prior <- 7.5/12
-    parscales <- c(100, 100, 100, 100, 100, 100, 10, 10, 30, 10, 10)
-
-  } else if (i %in% c(5, 15, 27)) {
-    initial_prior <- 5/12
-    min_prior <- 2.5/12
-    max_prior <- 7.5/12
-    parscales <- c(100, 100, 100, 100, 100, 100, 10, 10, 5, 10, 10)
-
-  } else if (i %in% c(7, 8, 45)) {
-    initial_prior <- 2.5/12
-    min_prior <- 1.5/12
-    max_prior <- 6/12
-    parscales <- c(100, 100, 100, 100, 100, 100, 30, 30, 0.5, 10, 10)
-    #"maxit" = 99999999　たぶん関係ないので省略。
-
-  } else if (i %in% c(9, 13, 17, 32, 34)) {
-    initial_prior <- 5/12
-    min_prior <- 2.5/12
-    max_prior <- 7.5/12
-    parscales <- c(100, 100, 100, 100, 100, 100, 10, 10, 10, 10, 10)
-
-  } else if (i %in% c(10, 11, 14, 20, 22, 26, 37, 38, 39, 43)) {
-    initial_prior <- 2.5/12
-    min_prior <- 1.5/12
-    max_prior <- 6/12
-    parscales <- c(100, 100, 100, 100, 100, 100, 10, 10, 0.5, 10, 10)
-
-  } else if (i %in% c(19, 36)) {
-    initial_prior <- 3/12
-    min_prior <- 2/12
-    max_prior <- 5/12
-    parscales <- c(30, 30, 30, 30, 30, 30, 20, 20, 5, 10, 10)
-
-  } else if (i == 23) {
-    initial_prior <- 5.5/12
-    min_prior <- 4/12
-    max_prior <- 7.5/12
-    parscales <- c(100, 100, 100, 100, 100, 100, 2, 2, 1, 10, 10)
-
-  } else if (i == 30) {
-    initial_prior <- 2.3/12
-    min_prior <- 2/12
-    parscales <- c(30, 30, 30, 30, 30, 30, 10, 10, 0.8, 10, 10)
-
-  } else if (i == 31) {
-    initial_prior <- 2.3/12
-    min_prior <- 2/12
-    max_prior <- 5/12
-    parscales <- c(30, 30, 30, 30, 30, 30, 10, 10, 0.5, 10, 10)
-
-  } else if (i == 33) {
-    initial_prior <- 2.5/12
-    min_prior <- 2/12
-    max_prior <- 6/12
-    parscales <-  c(100, 100, 100, 100, 100, 100, 30, 30, 5, 10, 10)
-    #"maxit" = 99999999　たぶん関係ないので省略。
-
-  } else if (i == 41) {
-    initial_prior <- 3/12
-    min_prior <- 2/12
-    max_prior <- 5/12
-    parscales <-  c(30, 30, 30, 30, 30, 30, 20, 20, 5, 10, 10)
-
-  } else {
-    #i == 44
-    initial_prior <- 3/12
-    min_prior <- 2.2/12
-    parscales <-  c(30, 30, 30, 30, 30, 30, 4, 4, 0.03, 10, 10)
-
-  }
+  # if (i %in% c(6, 12, 16, 18, 21, 25, 28, 29, 46, 47)) {
+  #   initial_prior <- 2.5/12
+  #   min_prior <- 1.5/12
+  #   max_prior <- 7.5/12
+  #   parscales <- c(100, 100, 100, 100, 100, 100, 10, 10, 0.5, 10, 10)
+  # 
+  # } else if (i %in% c(4, 24, 35, 40, 42)) {
+  #   initial_prior <- 5/12
+  #   min_prior <- 2.5/12
+  #   max_prior <- 7.5/12
+  #   parscales <- c(100, 100, 100, 100, 100, 100, 10, 10, 30, 10, 10)
+  # 
+  # } else if (i %in% c(5, 15, 27)) {
+  #   initial_prior <- 5/12
+  #   min_prior <- 2.5/12
+  #   max_prior <- 7.5/12
+  #   parscales <- c(100, 100, 100, 100, 100, 100, 10, 10, 5, 10, 10)
+  # 
+  # } else if (i %in% c(7, 8, 45)) {
+  #   initial_prior <- 2.5/12
+  #   min_prior <- 1.5/12
+  #   max_prior <- 6/12
+  #   parscales <- c(100, 100, 100, 100, 100, 100, 30, 30, 0.5, 10, 10)
+  #   #"maxit" = 99999999　たぶん関係ないので省略。
+  # 
+  # } else if (i %in% c(9, 13, 17, 32, 34)) {
+  #   initial_prior <- 5/12
+  #   min_prior <- 2.5/12
+  #   max_prior <- 7.5/12
+  #   parscales <- c(100, 100, 100, 100, 100, 100, 10, 10, 10, 10, 10)
+  # 
+  # } else if (i %in% c(10, 11, 14, 20, 22, 26, 37, 38, 39, 43)) {
+  #   initial_prior <- 2.5/12
+  #   min_prior <- 1.5/12
+  #   max_prior <- 6/12
+  #   parscales <- c(100, 100, 100, 100, 100, 100, 10, 10, 0.5, 10, 10)
+  # 
+  # } else if (i %in% c(19, 36)) {
+  #   initial_prior <- 3/12
+  #   min_prior <- 2/12
+  #   max_prior <- 5/12
+  #   parscales <- c(30, 30, 30, 30, 30, 30, 20, 20, 5, 10, 10)
+  # 
+  # } else if (i == 23) {
+  #   initial_prior <- 5.5/12
+  #   min_prior <- 4/12
+  #   max_prior <- 7.5/12
+  #   parscales <- c(100, 100, 100, 100, 100, 100, 2, 2, 1, 10, 10)
+  # 
+  # } else if (i == 30) {
+  #   initial_prior <- 2.3/12
+  #   min_prior <- 2/12
+  #   parscales <- c(30, 30, 30, 30, 30, 30, 10, 10, 0.8, 10, 10)
+  # 
+  # } else if (i == 31) {
+  #   initial_prior <- 2.3/12
+  #   min_prior <- 2/12
+  #   max_prior <- 5/12
+  #   parscales <- c(30, 30, 30, 30, 30, 30, 10, 10, 0.5, 10, 10)
+  # 
+  # } else if (i == 33) {
+  #   initial_prior <- 2.5/12
+  #   min_prior <- 2/12
+  #   max_prior <- 6/12
+  #   parscales <-  c(100, 100, 100, 100, 100, 100, 30, 30, 5, 10, 10)
+  #   #"maxit" = 99999999　たぶん関係ないので省略。
+  # 
+  # } else if (i == 41) {
+  #   initial_prior <- 3/12
+  #   min_prior <- 2/12
+  #   max_prior <- 5/12
+  #   parscales <-  c(30, 30, 30, 30, 30, 30, 20, 20, 5, 10, 10)
+  # 
+  # } else {
+  #   #i == 44
+  #   initial_prior <- 3/12
+  #   min_prior <- 2.2/12
+  #   parscales <-  c(30, 30, 30, 30, 30, 30, 4, 4, 0.03, 10, 10)
+  # 
+  # }
   
   # setting initial values
   guess <- c(
