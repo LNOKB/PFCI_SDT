@@ -282,7 +282,8 @@ PFCI_logL <- function(x) {
   
   mean_chimera_mat <- rep(mu83ms_chimeras, times = length(lambdas)) *
     rep(lambdas, each = length(mu83ms_chimeras))
-  criteria_chimera <- rep(criteria, each = 5)
+  criteria_chimera <- c(rep(criteria[1], 5), rep(criteria[2], 5), rep(criteria[3], 5))
+  
   for (cond in 4:18) {
     predicted_data[cond, 1] <- pnorm(criteria_chimera[cond-3], mean = mean_chimera_mat[cond-3], sd = sigma) # pred_chimera_others_rate
     predicted_data[cond, 2] <- 1 - predicted_data[cond, 1] # pred_chimera_color_rate
@@ -526,7 +527,8 @@ se_data2 <- se_data[index_order, 2]
 
 
 ### t-test 
-print(t.test(estimates[, 7], estimates[, 8], paired = TRUE))
+print(t.test(estimates[, 7], mu = 0, alternative = "greater"))
+print(t.test(estimates[, 8], mu = 0, alternative = "greater"))
 
 print(t.test(estimates[, 9], estimates[, 10], paired = TRUE))
 print(t.test(estimates[, 9], estimates[, 11], paired = TRUE))
@@ -539,21 +541,25 @@ print(t.test(estimates[, 10], estimates[, 11], paired = TRUE))
 
 
 # violin plot
+
 data_parameter_plot <- data.frame(
-  Parameters = rep(c("1.λ117ms", "2.λ150ms", "3.θBayes83ms", "4.θBayes117ms", 
-                     "5.θBayes150ms", "6.πcol"), each = 44),
-  Value = c(estimates[, 7], estimates[, 8], estimates[, 9], estimates[, 10], 
-            estimates[, 11],estimates[, 13])
+  Parameters = rep(c("1.πcol", "2.λ117ms", "3.λ150ms", "4.θBayes83ms", 
+                     "5.θBayes117ms", "6.θBayes150ms"), each = 44),
+  Value = c(estimates[, 13], estimates[, 7], estimates[, 8], estimates[, 9], 
+            estimates[, 10], estimates[, 11])
 )
 parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
-  geom_violin(fill = "skyblue", color = "black") +
+  geom_violin(fill = "skyblue", color = "black", scale = "width") +
   geom_jitter(width = 0.1) +
   # geom_hline(yintercept = 1, linetype = "dashed", color = "black", scale = "width") +
   labs(y = "Value") +
   scale_y_continuous(breaks = seq(0, 6, length = 7), limits = c(0, 6)) +
-  scale_x_discrete("Parameters", labels = c(expression("λ"[117*ms]), expression("λ"[150*ms]), 
-                                            expression("θ"[Bayes83*ms]), expression("θ"[Bayes117*ms]), 
-                                            expression("θ"[Bayes150*ms]))) +
+  scale_x_discrete("Parameters", labels = c(expression("π"[color]), 
+                                            expression("λ"[117*ms]), 
+                                            expression("λ"[150*ms]), 
+                                            expression("θ"[Bayes_83*ms]), 
+                                            expression("θ"[Bayes_117*ms]), 
+                                            expression("θ"[Bayes_150*ms]))) +
   stat_summary(fun = mean, geom = "point",
                shape = 18, size = 6, color = "black") +
   theme_classic() +
@@ -566,32 +572,6 @@ parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) 
   )
 plot(parameters_graph)
 ggsave(file = "parameters_graph_bayes.png", plot = parameters_graph, dpi = 150, width = 12, height = 6)
-
-
-# violin plot
-data_parameter_plot <- data.frame(
-  Parameters = rep("πcol", each = 44),
-  Value = estimates[, 13]
-)
-parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
-  geom_violin(fill = "skyblue", color = "black") +
-  geom_jitter(width = 0.1) +
-  # geom_hline(yintercept = 1, linetype = "dashed", color = "black", scale = "width") +
-  labs(y = "Value") +
-  scale_y_continuous(limits = c(0, 10/12)) +
-  scale_x_discrete("Parameters", labels = expression("π"[color])) +
-  stat_summary(fun = mean, geom = "point",
-               shape = 18, size = 6, color = "black") +
-  theme_classic() +
-  theme(
-    plot.title =   element_text(size = 20 * 2),
-    axis.title.x = element_blank(),
-    axis.title.y = element_text(size = 14 * 2),
-    axis.text.x =  element_text(size = 13 * 2),
-    axis.text.y =  element_text(size = 11 * 2)
-  )
-plot(parameters_graph)
-ggsave(file = "parameters_graph_bayes_π.png", plot = parameters_graph, dpi = 150, width = 3, height = 3)
 
 
 
@@ -713,14 +693,14 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
     legend.text =  element_text(size = 18),
     legend.title = element_text(size = 18)  #
   ) +
+  scale_y_continuous(
+    breaks = seq(0, 100, by = 20),
+    limits = c(0, 100)
+  ) +
   geom_text(data = ann_text, label = paste("Summed log-likelihood =",  round(sum(estimates[, 14]), 1)),
             size = 7,
             color = "red")
 
-# scale_y_continuous(
-#   breaks = seq(0, 100, by = 20),
-#   limits = c(0, 100)
-# ) +
 
 plot(bar_graph)
 ggsave(file = "bar_graph_bayes.png", plot = bar_graph, dpi = 150, width = 14, height = 8)
