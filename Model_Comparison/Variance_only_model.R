@@ -359,8 +359,8 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
     breaks = seq(0, 100, by = 20),    
     limits = c(0, 100)                  
   ) + 
-  geom_text(data = ann_text, label = paste("Summed log-likelihood =",  -round(sum(estimates[, 10]), 1)), 
-            size = 7,
+  geom_text(data = ann_text, label = paste("Summed logL =",  -round(sum(estimates[, 10]), 1)), 
+            size = 10,
             color = "red")
 
 
