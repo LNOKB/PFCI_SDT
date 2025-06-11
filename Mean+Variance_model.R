@@ -212,19 +212,20 @@ data_parameter_plot <- data.frame(
   Value = c(estimates[, 7], estimates[, 8], estimates[, 9], estimates[, 10])
 )
 parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) +
-  geom_violin(fill = "skyblue", color = "black") +  
+  geom_violin(fill = "skyblue", color = "black", scale = "width") +  
+  geom_jitter(width = 0.1) +
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   labs(y = "Value") + 
   scale_y_continuous(breaks = seq(0.5, 1.5, length = 5), limits = c(0.5, 1.5)) +
   scale_x_discrete("Parameters", labels = c(expression("λ"[117*ms]), expression("λ"[150*ms]), 
                                             expression("σ"[117*ms]), expression("σ"[150*ms]))) +
   stat_summary(fun = mean, geom = "point", 
-               shape = 16, size = 2, color = "black") +
+               shape = 18, size = 6, color = "black") +
   theme_classic() +  
-  annotate("text", x = 1, y = 1.07,   label = paste("***"), size = 10, color = "red") +
-  annotate("text", x = 2, y = 1.04,   label = paste("*"),   size = 10, color = "red") +
-  annotate("text", x = 3, y = 0.9215, label = paste("*"),   size = 10, color = "red") +
-  annotate("text", x = 4, y = 0.78,   label = paste("***"), size = 10, color = "red") +
+  # annotate("text", x = 1.2, y = 1.06,   label = paste("***"), size = 10, color = "red") +
+  # annotate("text", x = 2.2, y = 1.04,   label = paste("*"),   size = 10, color = "red") +
+  # annotate("text", x = 3.2, y = 0.92, label = paste("*"),   size = 10, color = "red") +
+  # annotate("text", x = 4.2, y = 0.8,   label = paste("***"), size = 10, color = "red") +
   theme(
     plot.title =   element_text(size = 20 * 2),    
     axis.title.x = element_blank(), 
@@ -233,6 +234,7 @@ parameters_graph <- ggplot(data_parameter_plot, aes(x = Parameters, y = Value)) 
     axis.text.y =  element_text(size = 11 * 2)    
   )
 plot(parameters_graph)
+ggsave(file = "parameters_graph.png", plot = parameters_graph, dpi = 150, width = 8, height = 6)
 
 
 ### Estimated distribution
@@ -259,7 +261,8 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
     scale_color_manual(values = colors) +
     labs(x = "Strength of peripheral color signal",
          y = "Probability density") +
-    scale_y_continuous(breaks = seq(0, 0.6, length = 7),limits = c(0, 0.6)) +
+    scale_x_continuous(limits = c(-3, 6)) +
+    scale_y_continuous(breaks = seq(0, 0.6, length = 4),limits = c(0, 0.6)) +
     geom_vline(xintercept = mean(estimates[, 11]), linetype = "dashed", color = "black") + 
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +  
     theme_minimal(base_size = 18) +
@@ -272,8 +275,8 @@ plot_sdt_distributions <- function(means, sds, attention_levels, image_types, co
       legend.position =  c(0.1, 5),
     )
   
-  ggplotly(Distribution) %>% htmlwidgets::saveWidget("Distribution.html")
-  browseURL("Distribution.html")
+  plot(Distribution)
+  ggsave(file = "Distribution.png", plot = Distribution, dpi = 150, width = 8, height = 6)
   
 }
 
@@ -346,22 +349,5 @@ bar_graph <- ggplot(data_bar, aes(x = Imagetype, y = Proportion)) +
     limits = c(0, 100)                  
   ) 
 
-ggplotly(bar_graph) %>% htmlwidgets::saveWidget("plot.html")
-browseURL("plot.html")
-
-rsquareds <- array(NA, dim = c(44, 1, 1))
-for (ii in 1:44) {
-  
-  yhat <- predicted_array[,2,ii]
-  y <- data_rate_array[,2,ii]
-  ymean <- mean(y)
-  rss <- sum((yhat - y)^2)
-  tss <- sum((y - ymean)^2)
-  
-  rsquareds[ii] <- (1 - (rss/tss))
-  meanR2 <- mean(rsquareds)
-  sdR2 <- sd(rsquareds)
-}
-print(meanR2)
-print(sdR2)
-
+plot(bar_graph)
+ggsave(file = "bar_graph.png", plot = bar_graph, dpi = 150, width = 14, height = 8)
