@@ -4,6 +4,7 @@ library(effectsize)
 library(plotly)
 library(viridis)
 
+# ---- Fitting based on mean+variance model ----
 dat <- read_csv("subdata.csv")
 result = dat %>%             
   filter(TorF1 %in% c(0, 1)) %>%
@@ -21,7 +22,6 @@ result = dat %>%
 # fixed parameters
 sigma83ms <- 1
 mu83ms_gray <- 0
-
 
 ### Fitting function
 fit_PFCI_mle <- function(data, add_constant = TRUE) {
@@ -80,7 +80,6 @@ fit_PFCI_mle <- function(data, add_constant = TRUE) {
   sigma150ms <-   fit$par[10]
   theta <-        fit$par[11] 
   logL <-         fit$value
-  
   
   est <- data.frame(mu83ms_9deg   = mu83ms_9deg, 
                     mu83ms_13deg  = mu83ms_13deg, 
@@ -181,58 +180,44 @@ for (i in 4:47) {
   predicted_array[, , (i - 3)] <-  fit[[2]]
 }
 
-################################################################################
+# ---- Prediction of confidence based on mean+variance model ----
 
-# parameters
-sigma83ms <- 1
-mu83ms_gray <- 0
-#mu83ms_17deg <- mean(estimates$mu83ms_9deg)
 mu83ms_17deg <- mean(estimates$mu83ms_17deg)
-
 mu83ms_color <- mean(estimates$mu83ms_color)
-
-lambda117ms <-  mean(estimates$lambda117ms)
 lambda150ms <-  mean(estimates$lambda150ms)
-sigma117ms <-   mean(estimates$sigma117ms)
 sigma150ms <-   mean(estimates$sigma150ms)
-theta <-  (mu83ms_17deg + mu83ms_color) / 2
+theta <-  mean(estimates$theta) 
 theta_conf_no <- theta - 1
 theta_conf_yes <- theta + 1
 
-
-predicted_conf <- matrix(NA, nrow = 6, ncol = 4) #No_high, No_low, Yes_high, Yes_low
-# gray image
-mean_no_mat <- c(mu83ms_17deg, mu83ms_17deg*lambda117ms, mu83ms_17deg*lambda150ms)
-sigmamat <- c(sigma83ms,sigma117ms,sigma150ms)
-for (cond in 1:3) {
-  predicted_conf[cond, 1] <- pnorm(theta_conf_no, mean = mean_no_mat[cond], sd = sigmamat[cond]) # CR_high_rate
+predicted_conf <- matrix(NA, nrow = 4, ncol = 4) #Column1:Color_high, 2:Color_low, 3:No_low, 4:No_high
+mean_no_mat <- c(mu83ms_17deg, mu83ms_17deg*lambda150ms)
+sigmamat <- c(sigma83ms,sigma150ms)
+for (cond in 1:2) {
+  predicted_conf[cond, 4] <- pnorm(theta_conf_no, mean = mean_no_mat[cond], sd = sigmamat[cond]) # N_high_rate
   A <- pnorm(theta, mean = mean_no_mat[cond], sd = sigmamat[cond])
-  predicted_conf[cond, 2] <- A - predicted_conf[cond, 1] # CR_low_rate
+  predicted_conf[cond, 3] <- A - predicted_conf[cond, 4] # N_low_rate
   B <- pnorm(theta_conf_yes, mean = mean_no_mat[cond], sd = sigmamat[cond])
-  predicted_conf[cond, 3] <- B - A # FA_high_rate
-  predicted_conf[cond, 4] <- 1 - (predicted_conf[cond, 1] + predicted_conf[cond, 2] + predicted_conf[cond, 3]) # FA_low_rate
+  predicted_conf[cond, 2] <- B - A # S_low_rate
+  predicted_conf[cond, 1] <- 1 - (predicted_conf[cond, 4] + predicted_conf[cond, 3] + predicted_conf[cond, 2]) # S_high_rate
 }
 
-mean_yes_mat <- c(mu83ms_color,mu83ms_color*lambda117ms,mu83ms_color*lambda150ms)
-for (cond in 4:6) {
-  predicted_conf[cond, 1] <- pnorm(theta_conf_no, mean = mean_yes_mat[cond-3], sd = sigmamat[cond-3]) # miss_high_rate
-  C <- pnorm(theta, mean = mean_yes_mat[cond-3], sd = sigmamat[cond-3])
-  predicted_conf[cond, 2] <- C - predicted_conf[cond, 1] # miss_low_rate
-  D <- pnorm(theta_conf_yes, mean = mean_yes_mat[cond-3], sd = sigmamat[cond-3])
-  predicted_conf[cond, 4] <- D - C # hit_low_rate
-  predicted_conf[cond, 3] <- 1 - (predicted_conf[cond, 1] + predicted_conf[cond, 2] + predicted_conf[cond, 4]) # hit_high_rate
+mean_yes_mat <- c(mu83ms_color,mu83ms_color*lambda150ms)
+for (cond in 3:4) {
+  predicted_conf[cond, 4] <- pnorm(theta_conf_no, mean = mean_yes_mat[cond-2], sd = sigmamat[cond-2]) # N_high_rate
+  C <- pnorm(theta, mean = mean_yes_mat[cond-2], sd = sigmamat[cond-2])
+  predicted_conf[cond, 3] <- C - predicted_conf[cond, 4] # N_low_rate
+  D <- pnorm(theta_conf_yes, mean = mean_yes_mat[cond-2], sd = sigmamat[cond-2])
+  predicted_conf[cond, 2] <- D - C # S_low_rate
+  predicted_conf[cond, 1] <- 1 - (predicted_conf[cond, 4] + predicted_conf[cond, 3] + predicted_conf[cond, 2]) # S_high_rate
   
 }
 
 index_order <- c(
-  1, 4, 
-  2, 5, 
-  3, 6
+  1, 3, 
+  2, 4 
 )
-
 predicted_conf <- predicted_conf[index_order,] * 100
-# predicted_conf <- predicted_conf * 100
-
 
 ### Estimated distribution
 plot_sdt_distributions_conf <- function(means, sds, attention_levels, image_types, colors) {
@@ -258,10 +243,11 @@ plot_sdt_distributions_conf <- function(means, sds, attention_levels, image_type
     scale_color_manual(values = colors) +
     labs(x = "Strength of peripheral color signal",
          y = "Probability density") +
-    scale_y_continuous(breaks = seq(0, 0.6, length = 7),limits = c(0, 0.6)) +
+    scale_x_continuous(breaks = seq(-2, 8, length = 6),limits = c(-2, 8)) +
+    scale_y_continuous(breaks = seq(0, 0.6, length = 4),limits = c(0, 0.6)) +
     geom_vline(xintercept = theta, linetype = "dashed", color = "black") +
-    geom_vline(xintercept = theta_conf_no, linetype = "dashed", color = colors[1]) +
-    geom_vline(xintercept = theta_conf_yes, linetype = "dashed", color = colors[2]) +
+    geom_vline(xintercept = theta_conf_no, linetype = "dashed", color = "#1f78b4") +
+    geom_vline(xintercept = theta_conf_yes, linetype = "dashed", color = "#ffcc00") +
     facet_wrap(~ Attention, nrow = 3, scales = "free_y") +
     theme_minimal(base_size = 18) +
     theme(
@@ -270,53 +256,55 @@ plot_sdt_distributions_conf <- function(means, sds, attention_levels, image_type
       axis.line = element_line(size = 0.5, color = "black"),
       axis.ticks = element_line(color = "black"),
       axis.ticks.length = unit(0.3, "cm"),
-      legend.position =  c(0.1, 5),
+      legend.position = "none"
     )
 
-    ggsave(file = "Distribution_conf.png", plot = Distribution_conf, dpi = 120, width = 12, height = 9)
-
+    ggsave(file = "Distribution_conf.png", plot = Distribution_conf, dpi = 150, width = 8, height = 6)
 
 }
 
 means_83ms <- c(mu83ms_17deg, mu83ms_color)
-means_117ms <- means_83ms * lambda117ms
 means_150ms <- means_83ms * lambda150ms
-means <- rbind(means_83ms, means_117ms, means_150ms)
-sd_83ms <-  c(rep(sigma83ms, 7))
-sd_117ms <- c(rep(sigma117ms, 7))
-sd_150ms <- c(rep(sigma150ms, 7))
-sds <- rbind(sd_83ms, sd_117ms, sd_150ms)
+means <- rbind(means_83ms, means_150ms)
+sd_83ms <-  c(rep(sigma83ms, 2))
+sd_150ms <- c(rep(sigma150ms, 2))
+sds <- rbind(sd_83ms, sd_150ms)
 
-attention_levels <- factor(c("83 ms", "117 ms", "150 ms"), levels = c("83 ms", "117 ms", "150 ms"))
+attention_levels <- factor(c("83 ms", "150 ms"), levels = c("83 ms", "150 ms"))
 image_types <- factor(
-  c("17 deg",  "color"),
-  levels = c("17 deg", "color"))
-colors <- viridis(2, option = "plasma")
+  c("chimera 17 degree",  "full-color"),
+  levels = c("chimera 17 degree",  "full-color"))
+colors <- viridis(7, option = "plasma")
+colors <- colors[c(4,7)]
 
 plot_sdt_distributions_conf(means, sds, attention_levels, image_types, colors)
 
 
-response_labels <- c("Non_color resp. - high conf.", "Non_color resp. - low conf.", "Color resp. - high conf.", "Color resp. - low conf.")
+response_labels <- c(
+  "Yes response with high confidence",
+  "Yes response with low confidence",
+  "No response with low confidence",
+  "No response with high confidence"
+)
 
 data_bar_conf <- data.frame(
-  Imagetype = rep(c("chimera 17 degree","full-color"), each = 4, times = 3),
-  Condition = rep(c("83 ms", "117 ms", "150 ms"), each = 8),
-  ResponseType = rep(response_labels, times = 6),
-  Proportion = as.vector(t(predicted_conf))
+  Imagetype = rep(c("chimera 17 degree","full-color"), each = 4, times = 2),
+  Condition = rep(c("83 ms", "150 ms"), each = 8),
+  ResponseType = rep(response_labels, times = 2),
+  Proportion = as.vector(t(predicted_conf)) 
 )
 
 data_bar_conf$Imagetype <- factor(data_bar_conf$Imagetype,
                                   levels = c("chimera 17 degree", "full-color"))
 data_bar_conf$Condition <- factor(data_bar_conf$Condition,
-                                  levels = c("83 ms", "117 ms", "150 ms"))
+                                  levels = c("83 ms", "150 ms"))
 data_bar_conf$ResponseType <- factor(data_bar_conf$ResponseType,
                                      levels = response_labels)
 
-library(ggplot2)
 
 bar_graph_conf <- ggplot(data_bar_conf, aes(x = Imagetype, y = Proportion, fill = ResponseType)) +
   geom_bar(stat = "identity", position = "stack") +
-  labs(x = NULL, y = "Confidence proportion (%)") +
+  labs(x = NULL, y = "Proportion (%)", fill = NULL) +
   facet_grid(. ~ Condition) +
   theme_minimal(base_size = 18) +
   theme(
@@ -333,15 +321,225 @@ bar_graph_conf <- ggplot(data_bar_conf, aes(x = Imagetype, y = Proportion, fill 
   ) +
   scale_fill_manual(
     values = c(
-      "Non_color resp. - high conf." = "#1f78b4",
-      "Non_color resp. - low conf." = "#a6cee3",
-      "Color resp. - high conf." = "#ffcc00",
-      "Color resp. - low conf." = "#ffe680"
+      "Yes response with high confidence" = "#ffcc00",
+      "Yes response with low confidence" = "#ffe680",
+      "No response with low confidence" = "#a6cee3",
+      "No response with high confidence" = "#1f78b4"
     )
   ) +
   scale_y_continuous(
-    breaks = seq(0, 100, by = 20),
+    breaks = seq(0, 100, by = 25),
     limits = c(0, 100)
   )
 
-ggsave(file = "bar_graph_conf.png", plot = bar_graph_conf, dpi = 150, width = 14, height = 8)
+ggsave(file = "bar_graph_conf.png", plot = bar_graph_conf, dpi = 180, width = 10, height = 6)
+
+
+
+# ---- Prediction of confidence based on Bayesian observer ----
+
+mu_S_83ms <- 2.95#mu83ms_color 
+mu_N_83ms <- 1.73#mu83ms_17deg 
+mu_S_150ms <- mu_S_83ms * 1.379
+mu_N_150ms <- mu_N_83ms * 1.379
+x_seq <- seq(0, 8, length.out = 4000)
+
+# Posterior Probability_S
+calc_posterior <- function(x, mu_S, mu_N, sigma) {
+  likelihood_S <- dnorm(x, mean = mu_S, sd = sigma)
+  likelihood_N <- dnorm(x, mean = mu_N, sd = sigma)
+  posterior <- likelihood_S / (likelihood_S + likelihood_N)
+  return(data.frame(x = x, likelihood_S = likelihood_S, likelihood_N = likelihood_N, posterior = posterior))
+}
+
+posterior_83ms  <- calc_posterior(x_seq, mu_S_83ms,  mu_N_83ms,  sigma83ms)
+posterior_150ms <- calc_posterior(x_seq, mu_S_150ms, mu_N_150ms, sigma83ms)
+
+# Find corresponding signal strength
+x_at_post75_83ms <- posterior_83ms$x[which.min(abs(posterior_83ms$posterior - 0.75))]
+x_at_post75_150ms <- posterior_150ms$x[which.min(abs(posterior_150ms$posterior - 0.75))]
+x_at_post50_83ms <- (mu_S_83ms + mu_N_83ms) / 2
+x_at_post50_150ms <- (mu_S_150ms + mu_N_150ms) / 2
+x_at_post25_83ms <- posterior_83ms$x[which.min(abs(posterior_83ms$posterior - 0.25))]
+x_at_post25_150ms <- posterior_150ms$x[which.min(abs(posterior_150ms$posterior - 0.25))]
+
+# Prediction
+posterior_conf <- matrix(NA, nrow = 4, ncol = 4) 
+xpost75mat <- c(x_at_post75_83ms,x_at_post75_150ms)
+xpost50mat <- c(x_at_post50_83ms,x_at_post50_150ms)
+xpost25mat <- c(x_at_post25_83ms,x_at_post25_150ms)
+
+#chimera
+mean_N_mat <- c(mu_N_83ms, mu_N_150ms)
+for (cond in 1:2) {
+  posterior_conf[cond, 4] <- pnorm(xpost25mat[cond], mean = mean_N_mat[cond], sd = sigma83ms) # N_high_rate
+  O <- pnorm(xpost50mat[cond], mean = mean_N_mat[cond], sd = sigma83ms)
+  posterior_conf[cond, 3] <- O - posterior_conf[cond, 4] # N_low_rate
+  P <- pnorm(xpost75mat[cond], mean = mean_N_mat[cond], sd = sigma83ms)
+  posterior_conf[cond, 2] <- P - O # S_low_rate
+  posterior_conf[cond, 1] <- 1 - (posterior_conf[cond, 4] + posterior_conf[cond, 3] + posterior_conf[cond, 2]) # S_high_rate
+}
+
+#full-color
+mean_S_mat <- c(mu_S_83ms,mu_S_150ms)
+for (cond in 3:4) {
+  posterior_conf[cond, 4] <- pnorm(xpost25mat[cond-2], mean = mean_S_mat[cond-2], sd = sigma83ms) # N_high_rate
+  Q <- pnorm(xpost50mat[cond-2], mean = mean_S_mat[cond-2], sd = sigma83ms)
+  posterior_conf[cond, 3] <- Q - posterior_conf[cond, 4] # N_low_rate
+  R <- pnorm(xpost75mat[cond-2], mean = mean_S_mat[cond-2], sd = sigma83ms)
+  posterior_conf[cond, 2] <- R - Q # S_low_rate
+  posterior_conf[cond, 1] <- 1 - (posterior_conf[cond, 4] + posterior_conf[cond, 3] + posterior_conf[cond, 2]) # S_high_rate
+
+}
+
+posterior_conf <- posterior_conf[index_order,] * 100
+
+# Creating graphs
+# Distributions
+plot_sdt_distributions_post_conf <- function(means, sds, attention_levels, image_types, colors) {
+  data_SDT_plot <- data.frame()
+  
+  for (i in 1:length(attention_levels)) {
+    for (j in 1:length(image_types)) {
+      x <- seq(means[i, j] - 3 * sds[i, j], means[i, j] + 3 * sds[i, j], length.out = 100)
+      y <- dnorm(x, mean = means[i, j], sd = sds[i, j])
+      
+      data_SDT_plot <- rbind(data_SDT_plot, data.frame(
+        x = x,
+        y = y,
+        Attention = attention_levels[i],
+        ImageType = image_types[j],
+        color = colors[j]
+      ))
+    }
+  }
+  
+  theta_values <- data.frame(
+    Attention = factor(c("83 ms", "150 ms"), levels = c("83 ms", "150 ms")),
+    theta = xpost50mat,
+    theta_conf_no = xpost25mat,
+    theta_conf_yes = xpost75mat
+  )
+  
+  Distribution_post_conf <- ggplot(data_SDT_plot, aes(x = x, y = y, color = ImageType)) +
+    geom_line(size = 1.2) +
+    scale_color_manual(values = colors) +
+    labs(x = "Strength of peripheral color signal",
+         y = "Probability density") +
+    scale_x_continuous(breaks = seq(-2, 8, length = 6),limits = c(-2, 8)) +
+    scale_y_continuous(breaks = seq(0, 0.6, length = 4),limits = c(0, 0.6)) +
+    geom_vline(data = theta_values, aes(xintercept = theta), linetype = "dashed", color = "black") +
+    geom_vline(data = theta_values, aes(xintercept = theta_conf_no), linetype = "dashed", color = "#1f78b4") +
+    geom_vline(data = theta_values, aes(xintercept = theta_conf_yes), linetype = "dashed", color = "#ffcc00") +
+    facet_wrap(~ Attention, nrow = 3, scales = "free_y") +
+    theme_minimal(base_size = 18) +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.line = element_line(size = 0.5, color = "black"),
+      axis.ticks = element_line(color = "black"),
+      axis.ticks.length = unit(0.3, "cm"),
+      legend.position = "none"
+    )
+
+  ggsave(file = "Distribution_post_conf.png", plot = Distribution_post_conf, dpi = 150, width = 8, height = 6)
+  
+}
+
+means_83ms <- c(mu_N_83ms, mu_S_83ms)
+means_150ms <- c(mu_N_150ms, mu_S_150ms)
+means <- rbind(means_83ms, means_150ms)
+sd_83ms <-  c(rep(sigma83ms, 2))
+sd_150ms <- sd_83ms
+sds <- rbind(sd_83ms, sd_150ms)
+attention_levels <- factor(c("83 ms", "150 ms"), levels = c("83 ms", "150 ms"))
+image_types <- factor(
+  c("chimera 17 degree",  "full-color"),
+  levels = c("chimera 17 degree",  "full-color"))
+colors <- viridis(7, option = "plasma")
+colors <- colors[c(4,7)]
+plot_sdt_distributions_post_conf(means, sds, attention_levels, image_types, colors)
+
+# Bar graphs
+
+data_bar_post_conf <- data_bar_conf
+data_bar_post_conf$Proportion <- as.vector(t(posterior_conf))
+
+bar_graph_conf <- ggplot(data_bar_post_conf, aes(x = Imagetype, y = Proportion, fill = ResponseType)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = NULL, y = "Proportion (%)", fill = NULL) +
+  facet_grid(. ~ Condition) +
+  theme_minimal(base_size = 18) +
+  theme(
+    legend.position = "right",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.title.x = element_text(size = 20),
+    axis.title.y = element_text(size = 20),
+    axis.text.x = element_text(size = 16, angle = 45, hjust = 1, color = "black"),
+    axis.text.y = element_text(size = 16, color = "black"),
+    strip.text = element_text(size = 20),
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 18)
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Yes response with high confidence" = "#ffcc00",
+      "Yes response with low confidence" = "#ffe680",
+      "No response with low confidence" = "#a6cee3",
+      "No response with high confidence" = "#1f78b4"
+    )
+  ) 
+ggsave(file = "bar_graph_posterior_conf.png", plot = bar_graph_conf, dpi = 180, width = 10, height = 6)
+
+# #Detailed bar graph
+# 
+# data_summary <- data_bar_post_conf %>%
+#   mutate(
+#     Confidence = ifelse(grepl("high confidence", ResponseType), "High", "Low"),
+#     Correctness = case_when(
+#       Imagetype == "chimera 17 degree" & grepl("^No response", ResponseType) ~ "Correct",
+#       Imagetype == "full-color" & grepl("^Yes response", ResponseType) ~ "Correct",
+#       TRUE ~ "Incorrect"
+#     )
+#   ) %>%
+#   group_by(Imagetype, Condition, Correctness, Confidence) %>%
+#   summarise(Proportion = sum(Proportion), .groups = "drop") %>%
+#   pivot_wider(names_from = Confidence, values_from = Proportion, values_fill = 0) %>%
+#   mutate(
+#     Total = High + Low,
+#     HighConfidenceRate = High / Total * 100
+#   )
+# 
+# data_summary %>%
+#   select(Condition, Imagetype, Correctness, HighConfidenceRate) %>%
+#   arrange(Condition, Imagetype, Correctness)
+# 
+# 
+# ggplot(data_summary, aes(x = Imagetype, y = HighConfidenceRate, fill = Correctness)) +
+#   geom_bar(stat = "identity", position = "dodge") +
+#   facet_grid(. ~ Condition) +
+#   labs(
+#     x = NULL,
+#     y = "High Confidence Rate (%)",
+#     fill = "Response Accuracy"
+#   ) +
+#   scale_fill_manual(
+#     values = c("Correct" = "#4CAF50", "Incorrect" = "#F44336")  # 緑：正答、赤：誤答
+#   ) +
+#   theme_minimal(base_size = 18) +
+#   coord_cartesian(ylim = c(0, 100)) +  # ここでy軸の範囲を指定
+#   theme(
+#     axis.text.x = element_text(size = 14, angle = 45, hjust = 1),
+#     axis.text.y = element_text(size = 14),
+#     axis.title.y = element_text(size = 16),
+#     strip.text = element_text(size = 16),
+#     legend.title = element_text(size = 14),
+#     legend.text = element_text(size = 13),
+#     axis.ticks.length = unit(0.25, "cm"),              # 目盛の長さ
+#     axis.ticks = element_line(color = "black"),        # 目盛の線を描く
+#     axis.ticks.y.right = element_line(),               # y軸右側も表示したい場合
+#     axis.line = element_line(color = "black"),         # 軸線を描く
+#     panel.grid.major = element_blank(),                # メジャー罫線を消す
+#     panel.grid.minor = element_blank()                 # マイナー罫線を消す
+#   )
